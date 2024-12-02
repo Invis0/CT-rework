@@ -33,7 +33,7 @@ app.add_middleware(
 )
 
 # Database configuration for Neon
-DATABASE_URL = "postgres://neondb_owner:Q9kuSbpPETA6@ep-summer-fire-a2aq24xx-pooler.eu-central-1.aws.neon.tech/neondb"
+DATABASE_URL = "postgresql://neondb_owner:Q9kuSbpPETA6@ep-summer-fire-a2aq24xx.eu-central-1.aws.neon.tech/neondb?sslmode=require"
 
 # Configure SQLAlchemy engine with SSL requirement and connection pooling
 engine = create_engine(
