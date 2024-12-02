@@ -57,7 +57,7 @@ export default function Wallets() {
             }
             setError(null);
 
-            const response = await fetch(`http://localhost:8000/wallets/top?min_roi=${filterCriteria.minRoi}&min_win_rate=${filterCriteria.minWinRate}&min_trades=${filterCriteria.minTrades}`);
+            const response = await fetch(`/api/wallets/top?min_roi=${filterCriteria.minRoi}&min_win_rate=${filterCriteria.minWinRate}&min_trades=${filterCriteria.minTrades}`);
             
             if (!response.ok) {
                 throw new Error('Failed to fetch wallets');
