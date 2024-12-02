@@ -35,9 +35,10 @@ export default function SearchWallet() {
         setError(null);
         
         try {
-            const response = await fetch(`https://feed-api.cielo.finance/v1/pnl/tokens?wallet=${address}&skip_unrealized_pnl=true&days=7d&page=1`, {
-                headers: API_HEADERS
-            });
+            const response = await fetch(
+                `https://feed-api.cielo.finance/v1/pnl/tokens?wallet=${address}&skip_unrealized_pnl=true&days=7d&page=1`,
+                { headers: API_HEADERS }
+            );
 
             if (!response.ok) {
                 throw new Error('Failed to fetch wallet data');
@@ -46,8 +47,12 @@ export default function SearchWallet() {
             const data = await response.json();
             setWalletData(data.data);
             
-        } catch (err) {
-            setError(err.message);
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                setError(error.message);
+            } else {
+                setError('An unknown error occurred');
+            }
         } finally {
             setLoading(false);
         }
