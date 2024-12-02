@@ -12,7 +12,7 @@ import {
 import Sidebar from '../components/Sidebar';
 import WalletCard from '../components/WalletCard';
 import { Alert, AlertTitle, AlertDescription } from '../components/ui/alert';
-
+import { Analytics } from "@vercel/analytics/react";
 // API base URL
 const API_URL = 'http://localhost:8000';
 
