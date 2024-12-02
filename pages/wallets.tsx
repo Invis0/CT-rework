@@ -5,6 +5,16 @@ import Sidebar from '../components/Sidebar';
 import WalletCard from '../components/WalletCard';
 import FilterPanel from '../components/FilterPanel';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+interface FilterCriteria {
+    minRoi: number;
+    minWinRate: number;
+    minTrades: number;
+    minVolume: number;
+    minProfit: number;
+    riskLevel: string | null;
+    tokenType: string | null;
+    timeFrame: string;
+}
 
 interface WalletData {
     address: string;
