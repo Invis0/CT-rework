@@ -29,11 +29,16 @@ export default function Wallets() {
     const [searchTerm, setSearchTerm] = useState('');
     const [refreshing, setRefreshing] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
-    const [filterCriteria, setFilterCriteria] = useState({
+    const [filterCriteria, setFilterCriteria] = useState<FilterCriteria>({
         minRoi: 20,
         minWinRate: 50,
-        minTrades: 20
-    });
+        minTrades: 20,
+        minVolume: 0,
+        minProfit: 0,
+        riskLevel: null,
+        tokenType: null,
+        timeFrame: '7d'
+      });
 
     const fetchWallets = async (showRefreshAnimation = true) => {
         try {
