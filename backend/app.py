@@ -6,6 +6,8 @@ from typing import List, Optional, Dict, Union
 from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
+import os
+
 import json
 import logging
 from fastapi.responses import JSONResponse
@@ -27,7 +29,14 @@ app.add_middleware(
 )
 
 # Database configuration
-DATABASE_URL = "postgresql://postgres:Invis0704@localhost:5432/wallet_analyzer"
+DATABASE_URL = os.environ.get('DATABASE_URL', "postgresql://postgres:Invis0704@localhost:5432/wallet_analyzer")
+
+# If running on Vercel, use their connection pooling
+if os.environ.get('VERCEL_ENV') == 'production':
+    POSTGRES_URL = os.environ.get('POSTGRES_URL')
+    if POSTGRES_URL:
+        DATABASE_URL = f"{POSTGRES_URL}?sslmode=require&pool_timeout=0&pool_size=10&max_overflow=2"
+
 engine = create_engine(DATABASE_URL, pool_size=5, max_overflow=10)
 
 # Pydantic Models with improved validation
