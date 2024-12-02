@@ -57,7 +57,7 @@ export default function Wallets() {
             }
             setError(null);
 
-            const response = await fetch(`http://localhost:8000/wallets/top?min_roi=${filterCriteria.minRoi}&min_win_rate=${filterCriteria.minWinRate}&min_trades=${filterCriteria.minTrades}`);
+            const response = await fetch(`https://api-production-0673.up.railway.app/wallets/top?min_roi=${filterCriteria.minRoi}&min_win_rate=${filterCriteria.minWinRate}&min_trades=${filterCriteria.minTrades}`);
             
             if (!response.ok) {
                 throw new Error('Failed to fetch wallets');

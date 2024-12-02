@@ -26,19 +26,20 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="CopyTrading Analytics API")
 
 # Configure CORS
+origins = [
+    "http://localhost:3000",
+    "http://localhost:8000",
+    "https://ct-rework-m7vo-pzl8ssvvl-robinavi0012gmailcoms-projects.vercel.app",
+    "https://ct-rework-m7vo.vercel.app"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://ct-rework-m7vo-pzl8ssvvl-robinavi0012gmailcoms-projects.vercel.app",
-        "https://ct-rework-m7vo.vercel.app",
-        "http://localhost:3000",
-        "http://localhost:8000"
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 # Database configuration for Neon
 DATABASE_URL = "postgresql://neondb_owner:Q9kuSbpPETA6@ep-summer-fire-a2aq24xx.eu-central-1.aws.neon.tech/neondb?sslmode=require"
 
