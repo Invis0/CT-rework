@@ -18,6 +18,7 @@ const API_HEADERS = {
     'Sec-Fetch-Mode': 'cors',
     'Sec-Fetch-Site': 'cross-site',
 };
+const CIELO_API_URL = process.env.NEXT_PUBLIC_CIELO_API_URL || 'https://feed-api.cielo.finance';
 
 export default function SearchWallet() {
     const [address, setAddress] = useState('');
@@ -35,32 +36,24 @@ export default function SearchWallet() {
         setError(null);
         
         try {
-            const response = await fetch(
-                `https://feed-api.cielo.finance/v1/pnl/tokens?wallet=${address}&skip_unrealized_pnl=true&days=7d&page=1`,
-                { 
-                    headers: API_HEADERS,
-                    mode: 'cors'
-                }
-            );
+            // Use a proxy service to handle CORS
+            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(
+                `${CIELO_API_URL}/v1/pnl/tokens?wallet=${address}&skip_unrealized_pnl=true&days=7d&page=1`
+            )}`;
 
-            if (!response.ok) {
-                throw new Error('Failed to fetch wallet data');
-            }
+            const response = await fetch(proxyUrl);
+            if (!response.ok) throw new Error('Failed to fetch wallet data');
 
-            const data = await response.json();
+            const proxyData = await response.json();
+            const data = JSON.parse(proxyData.contents);
             setWalletData(data.data);
             
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                setError(error.message);
-            } else {
-                setError('An unknown error occurred');
-            }
+        } catch (error) {
+            setError(error instanceof Error ? error.message : 'An unknown error occurred');
         } finally {
             setLoading(false);
         }
     };
-
     return (
         <div className="flex h-screen bg-gray-900">
             <Sidebar />
