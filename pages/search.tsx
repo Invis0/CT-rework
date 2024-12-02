@@ -11,7 +11,7 @@ const API_HEADERS = {
     'Accept-Language': 'en-US,en;q=0.5',
     'Referer': 'https://app.cielo.finance/',
     'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhZGRyZXNzIjoiMHhlNGFiMjMxNmUyNmQ0MDczZTJmN2JjOThhZTE0ZmJmYjNmOTU0NDFjIiwiaXNzIjoiaHR0cHM6Ly9hcGkudW5pd2hhbGVzLmlvLyIsInN1YiI6InVzZXIiLCJwbGFuIjoiYmFzaWMiLCJiYWxhbmNlIjowLCJpYXQiOjE3MzMwODgwNzIsImV4cCI6MTczMzA5ODg3Mn0.PZ-2vZ-2rDPWY7kJpbLDvz0Y7nsvSmE-RX2zYxIeXes',
-    'API-KEY': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0aW1lc3RhbXAiOjE3MzMwODgwOTh9.blroCEOCSPFvw_c0WoJNlh5uYYbb83UmQxqDUXuyCL0',
+    'API-KEY': 'eeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0aW1lc3RhbXAiOjE3MzMwODgwOTh9.blroCEOCSPFvw_c0WoJNlh5uYYbb83UmQxqDUXuyCL0',
     'Origin': 'https://app.cielo.finance',
     'Connection': 'keep-alive',
     'Sec-Fetch-Dest': 'empty',
