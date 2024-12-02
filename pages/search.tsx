@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, AlertCircle } from 'lucide-react';
+import { Search } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
@@ -37,7 +37,10 @@ export default function SearchWallet() {
         try {
             const response = await fetch(
                 `https://feed-api.cielo.finance/v1/pnl/tokens?wallet=${address}&skip_unrealized_pnl=true&days=7d&page=1`,
-                { headers: API_HEADERS }
+                { 
+                    headers: API_HEADERS,
+                    mode: 'cors'
+                }
             );
 
             if (!response.ok) {
