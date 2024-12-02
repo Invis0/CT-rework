@@ -24,14 +24,18 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="CopyTrading Analytics API")
 
 # Configure CORS
+# Update your CORS settings in app.py to include your Vercel domain
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://ct-rework-m7vo.vercel.app/",  # Add your Vercel domain
+        "http://localhost:3000",  # For local development
+        "*"  # Temporarily allow all origins while testing
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 # Database configuration for Neon
 DATABASE_URL = "postgres://neondb_owner:Q9kuSbpPETA6@ep-summer-fire-a2aq24xx-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require"
 # Configure SQLAlchemy engine with SSL requirement and connection pooling
