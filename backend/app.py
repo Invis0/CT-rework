@@ -1,3 +1,5 @@
+from fastapi.middleware.cors import CORSMiddleware
+import os
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, text, exc
@@ -21,23 +23,26 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="CopyTrading Analytics API")
+app = FastAPI(
+    title="CopyTrading Analytics API",
+    docs_url="/docs",
+    openapi_url="/openapi.json"
+)
+
 
 # Configure CORS
-# Update your CORS settings in app.py to include your Vercel domain
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://ct-rework-m7vo.vercel.app/",  # Add your Vercel domain
-        "http://localhost:3000",  # For local development
-        "*"  # Temporarily allow all origins while testing
-    ],
+    allow_origins=["https://your-frontend-url.vercel.app"],  # Replace with your actual frontend URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
 # Database configuration for Neon
-DATABASE_URL = "postgres://neondb_owner:Q9kuSbpPETA6@ep-summer-fire-a2aq24xx-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require"
+DATABASE_URL = "postgresql://neondb_owner:Q9kuSbpPETA6@ep-summer-fire-a2aq24xx.eu-central-1.aws.neon.tech/neondb?sslmode=require"
+
 # Configure SQLAlchemy engine with SSL requirement and connection pooling
 engine = create_engine(
     DATABASE_URL,
@@ -482,6 +487,3 @@ async def shutdown():
     engine.dispose()
     logger.info("Database connections closed")
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")

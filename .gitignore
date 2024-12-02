@@ -2,15 +2,16 @@
 /node_modules
 /.pnp
 .pnp.js
+__pycache__/
 
 # testing
 /coverage
-
+*.log
 # next.js
 /.next/
 /out/
 /build
-
+*.pyc
 # misc
 .DS_Store
 *.pem
