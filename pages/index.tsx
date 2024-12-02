@@ -54,8 +54,8 @@ export default function Dashboard() {
             setError(null);
 
             const [walletsResponse, statsResponse] = await Promise.all([
-                fetch(`/api/wallets/top?min_roi=${selectedMetrics.minRoi}&min_win_rate=${selectedMetrics.minWinRate}&min_trades=${selectedMetrics.minTrades}`),
-                fetch(`/api/stats/overview`)
+                fetch(`${API_URL}/wallets/top?min_roi=${selectedMetrics.minRoi}&min_win_rate=${selectedMetrics.minWinRate}&min_trades=${selectedMetrics.minTrades}`),
+                fetch(`${API_URL}/stats/overview`)
             ]);
 
             if (!walletsResponse.ok || !statsResponse.ok) {

@@ -23,12 +23,7 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(
-    title="CopyTrading Analytics API",
-    docs_url="/docs",
-    openapi_url="/openapi.json"
-)
-
+app = FastAPI(title="CopyTrading Analytics API")
 
 # Configure CORS
 app.add_middleware(
@@ -36,8 +31,8 @@ app.add_middleware(
     allow_origins=[
         "https://ct-rework-m7vo-pzl8ssvvl-robinavi0012gmailcoms-projects.vercel.app",
         "https://ct-rework-m7vo.vercel.app",
-        "http://localhost:3000",  # For local development
-        "http://localhost:8000"   # For local API development
+        "http://localhost:3000",
+        "http://localhost:8000"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -140,7 +135,7 @@ def calculate_wallet_scores(row: pd.Series) -> dict:
             "token_stats": []
         }
 
-@app.get("/api/wallets/top", response_model=List[WalletScore])
+@app.get("/wallets/top", response_model=List[WalletScore])
 async def get_top_wallets(
     min_roi: float = Query(0.0, ge=0),
     min_win_rate: float = Query(0.0, ge=0, le=100),
@@ -239,7 +234,7 @@ async def get_top_wallets(
         logger.error(f"Unexpected error in get_top_wallets: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/wallet/{address}")
+@app.get("/wallet/{address}")
 async def get_wallet_details(address: str):
     """Get detailed metrics for a specific wallet with NULL handling"""
     try:
@@ -290,7 +285,7 @@ async def get_wallet_details(address: str):
         logger.error(f"Error fetching wallet details: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/stats/overview")
+@app.get("/stats/overview")
 async def get_system_stats():
     """Get overall system statistics and trends"""
     try:
@@ -361,7 +356,7 @@ async def get_system_stats():
         logger.error(f"Error in get_system_stats: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/analytics/{address}")
+@app.get("/analytics/{address}")
 async def get_wallet_analytics(address: str, timeframe: str = "7d"):
     """Get detailed analytics for a wallet"""
     try:
@@ -404,7 +399,7 @@ async def get_wallet_analytics(address: str, timeframe: str = "7d"):
         logger.error(f"Error fetching wallet analytics: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/wallets")
+@app.get("/wallets")
 async def get_wallets_page(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -491,3 +486,6 @@ async def shutdown():
     engine.dispose()
     logger.info("Database connections closed")
 
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
