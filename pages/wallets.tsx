@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import WalletCard from '../components/WalletCard';
 import Sidebar from '../components/Sidebar';
-import FilterPanel from '../components/FilterPanel';
+import FilterPanel, { FilterCriteria } from '../components/FilterPanel';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 // Use the same WalletData interface as in other files

@@ -83,10 +83,10 @@ export default function SearchWallet() {
             return;
         }
 
-        setLoading(true);
-        setError(null);
-        
         try {
+            setLoading(true);
+            setError(null);
+            
             const [dbResponse, cieloResponse] = await Promise.all([
                 fetch(`https://api-production-0673.up.railway.app/wallets/${address}`),
                 fetch(`https://api-production-0673.up.railway.app/proxy/cielo/${address}`)
@@ -96,8 +96,8 @@ export default function SearchWallet() {
                 throw new Error(`Failed to fetch wallet data: ${dbResponse.statusText}`);
             }
 
-            const dbData: WalletResponse = await dbResponse.json();
-            let cieloResult: CieloResponse | null = null;
+            const dbData = await dbResponse.json();
+            let cieloResult = null;
 
             if (cieloResponse.ok) {
                 const cieloData = await cieloResponse.json();
@@ -107,21 +107,18 @@ export default function SearchWallet() {
                 }
             }
 
-            // Combine data with type safety
-            const combinedData: WalletResponse = {
+            setWalletData({
                 ...dbData,
                 ...(cieloResult && {
                     total_volume_24h: cieloResult.total_volume_24h,
                     total_pnl_24h: cieloResult.total_pnl_24h,
                     additional_metrics: cieloResult.tokens
                 })
-            };
-
-            setWalletData(combinedData);
+            });
             
         } catch (error) {
-            setError(error instanceof Error ? error.message : 'An unknown error occurred');
             console.error('Search error:', error);
+            setError(error instanceof Error ? error.message : 'An unknown error occurred');
         } finally {
             setLoading(false);
         }

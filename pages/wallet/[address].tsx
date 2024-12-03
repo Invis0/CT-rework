@@ -67,6 +67,21 @@ interface WalletDetailsData {
     total_sell_usd: number;
 }
 
+interface StatCardProps {
+    title: string;
+    value: string;
+    icon?: React.ReactNode;
+    trend?: boolean;
+    subtitle?: string;
+}
+
+// Add proper type for tokenDistributionData
+interface TokenDistribution {
+    name: string;
+    value: number;
+    profit: boolean;
+}
+
 export default function WalletDetails() {
     const router = useRouter();
     const { address } = router.query;
@@ -146,7 +161,7 @@ export default function WalletDetails() {
         pnl: day.pnl_usd,
     })) || [];
 
-    const tokenDistributionData = walletData.tokens?.map((token: any) => ({
+    const tokenDistributionData = walletData.tokens?.map((token): TokenDistribution => ({
         name: token.token_symbol,
         value: Math.abs(token.total_pnl_usd),
         profit: token.total_pnl_usd > 0,
@@ -445,14 +460,6 @@ export default function WalletDetails() {
             </main>
         </div>
     );
-}
-
-interface StatCardProps {
-    title: string;
-    value: string;
-    icon?: React.ReactNode;
-    trend?: boolean;
-    subtitle?: string;
 }
 
 function StatCard({ title, value, icon, trend, subtitle }: StatCardProps) {
