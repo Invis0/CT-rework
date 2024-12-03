@@ -62,6 +62,9 @@ interface WalletAnalytics {
     };
     is_copyworthy: boolean;
     copyworthy_reasons: string[];
+    roi_score: number;
+    consistency_score: number;
+    volume_score: number;
 }
 
 interface WalletData {
@@ -268,19 +271,19 @@ export default function SearchWallet() {
                                         <div>
                                             <span className="text-gray-400">ROI Score</span>
                                             <p className="text-lg font-semibold text-white">
-                                                {walletData.analytics?.roi_score?.toFixed(1) || '0'}
+                                                {walletData.roi_score?.toFixed(1) || '0'}
                                             </p>
                                         </div>
                                         <div>
                                             <span className="text-gray-400">Consistency</span>
                                             <p className="text-lg font-semibold text-white">
-                                                {walletData.analytics?.consistency_score?.toFixed(1) || '0'}
+                                                {walletData.consistency_score?.toFixed(1) || '0'}
                                             </p>
                                         </div>
                                         <div>
                                             <span className="text-gray-400">Volume Score</span>
                                             <p className="text-lg font-semibold text-white">
-                                                {walletData.analytics?.volume_score?.toFixed(1) || '0'}
+                                                {walletData.volume_score?.toFixed(1) || '0'}
                                             </p>
                                         </div>
                                     </div>

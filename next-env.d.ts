@@ -1,21 +1,15 @@
 /// <reference types="next" />
 /// <reference types="next/image-types/global" />
 
-declare namespace React {
-    type ReactNode = 
-        | string
-        | number
-        | boolean
-        | null
-        | undefined
-        | React.ReactElement
-        | React.ReactFragment
-        | React.ReactPortal;
-}
-
 declare module 'react' {
     export * from 'react/index';
-    export type { ReactNode } from 'react';
+    export const useState: <T>(initialState: T | (() => T)) => [T, (newState: T | ((prevState: T) => T)) => void];
+    export const useEffect: (effect: () => void | (() => void), deps?: ReadonlyArray<any>) => void;
+    export const useCallback: <T extends (...args: any[]) => any>(callback: T, deps: ReadonlyArray<any>) => T;
+    export const useContext: <T>(context: React.Context<T>) => T;
+    export const createContext: <T>(defaultValue: T) => React.Context<T>;
+    export const useRef: <T>(initialValue: T) => { current: T };
+    export const useMemo: <T>(factory: () => T, deps: ReadonlyArray<any>) => T;
 }
 
 declare module 'react/jsx-runtime';
