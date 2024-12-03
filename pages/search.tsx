@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search as SearchIcon, AlertCircle } from 'lucide-react';
+import { Search as SearchIcon, AlertCircle, DollarSign, Activity, TrendingUp, BarChart2 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import WalletCard from '../components/WalletCard';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -221,23 +221,103 @@ export default function SearchWallet() {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                 <StatCard
                                     title="Total PNL"
-                                    value={`$${walletData?.total_pnl_usd?.toLocaleString() ?? '0'}`}
-                                    trend={walletData?.total_pnl_usd ? walletData.total_pnl_usd > 0 : undefined}
+                                    value={`$${walletData.total_pnl_usd?.toLocaleString() ?? '0'}`}
+                                    trend={walletData.total_pnl_usd > 0}
+                                    icon={<DollarSign className="text-green-400" />}
                                 />
                                 <StatCard
                                     title="Win Rate"
-                                    value={`${walletData?.winrate?.toFixed(1) ?? '0'}%`}
-                                    trend={walletData?.winrate ? walletData.winrate > 50 : undefined}
-                                />
-                                <StatCard
-                                    title="Total Trades"
-                                    value={walletData?.total_trades?.toString() ?? '0'}
+                                    value={`${walletData.winrate?.toFixed(1) ?? '0'}%`}
+                                    trend={walletData.winrate > 50}
+                                    icon={<Activity className="text-blue-400" />}
+                                    subtitle={`${walletData.total_trades} trades`}
                                 />
                                 <StatCard
                                     title="ROI"
-                                    value={`${walletData?.roi_percentage?.toFixed(2) ?? '0'}%`}
-                                    trend={walletData?.roi_percentage ? walletData.roi_percentage > 0 : undefined}
+                                    value={`${walletData.roi_percentage?.toFixed(2) ?? '0'}%`}
+                                    trend={walletData.roi_percentage > 0}
+                                    icon={<TrendingUp className="text-yellow-400" />}
                                 />
+                                <StatCard
+                                    title="Total Volume"
+                                    value={`$${walletData.total_volume?.toLocaleString() ?? '0'}`}
+                                    icon={<BarChart2 className="text-purple-400" />}
+                                />
+                            </div>
+
+                            {/* Risk Metrics */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="bg-gray-800 rounded-lg p-6">
+                                    <h3 className="text-lg font-semibold text-white mb-4">Risk Profile</h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <span className="text-gray-400">Risk Rating</span>
+                                            <p className={`text-lg font-semibold ${getRiskColor(walletData.risk_metrics?.risk_rating)}`}>
+                                                {walletData.risk_metrics?.risk_rating || 'N/A'}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-400">Max Drawdown</span>
+                                            <p className="text-lg font-semibold text-white">
+                                                {walletData.risk_metrics?.max_drawdown?.toFixed(2) || '0'}%
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-400">Sharpe Ratio</span>
+                                            <p className="text-lg font-semibold text-white">
+                                                {walletData.risk_metrics?.sharpe_ratio?.toFixed(2) || '0'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-gray-800 rounded-lg p-6">
+                                    <h3 className="text-lg font-semibold text-white mb-4">Performance Scores</h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <span className="text-gray-400">ROI Score</span>
+                                            <p className="text-lg font-semibold text-white">
+                                                {walletData.roi_score?.toFixed(1) || '0'}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-400">Consistency</span>
+                                            <p className="text-lg font-semibold text-white">
+                                                {walletData.consistency_score?.toFixed(1) || '0'}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-400">Volume Score</span>
+                                            <p className="text-lg font-semibold text-white">
+                                                {walletData.volume_score?.toFixed(1) || '0'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-gray-800 rounded-lg p-6">
+                                    <h3 className="text-lg font-semibold text-white mb-4">Trading Stats</h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <span className="text-gray-400">Avg Trade Size</span>
+                                            <p className="text-lg font-semibold text-white">
+                                                ${walletData.avg_trade_size?.toLocaleString() || '0'}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-400">Last Trade</span>
+                                            <p className="text-lg font-semibold text-white">
+                                                {formatTimeAgo(walletData.last_trade_time)}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-400">Total Tokens</span>
+                                            <p className="text-lg font-semibold text-white">
+                                                {walletData.token_metrics?.length || 0}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Wallet Card */}
@@ -277,9 +357,11 @@ interface StatCardProps {
     title: string;
     value: string;
     trend?: boolean;
+    icon?: React.ReactNode;
+    subtitle?: string;
 }
 
-function StatCard({ title, value, trend }: StatCardProps) {
+function StatCard({ title, value, trend, icon, subtitle }: StatCardProps) {
     return (
         <div className="bg-gray-800 rounded-lg p-6">
             <p className="text-gray-400 text-sm">{title}</p>
@@ -289,6 +371,43 @@ function StatCard({ title, value, trend }: StatCardProps) {
                     {trend ? '↑' : '↓'} {trend ? 'Positive' : 'Negative'}
                 </p>
             )}
+            {icon && (
+                <div className="mt-4">
+                    {icon}
+                </div>
+            )}
+            {subtitle && (
+                <p className="text-sm text-gray-400 mt-2">{subtitle}</p>
+            )}
         </div>
     );
+}
+
+function getRiskColor(riskRating: 'Low' | 'Medium' | 'High') {
+    switch (riskRating) {
+        case 'Low':
+            return 'text-green-400';
+        case 'Medium':
+            return 'text-yellow-400';
+        case 'High':
+            return 'text-red-400';
+        default:
+            return 'text-gray-400';
+    }
+}
+
+function formatTimeAgo(time: string) {
+    const now = new Date();
+    const then = new Date(time);
+    const diff = Math.floor((now.getTime() - then.getTime()) / 1000);
+
+    if (diff < 60) {
+        return `${diff} seconds ago`;
+    } else if (diff < 3600) {
+        return `${Math.floor(diff / 60)} minutes ago`;
+    } else if (diff < 86400) {
+        return `${Math.floor(diff / 3600)} hours ago`;
+    } else {
+        return `${Math.floor(diff / 86400)} days ago`;
+    }
 }

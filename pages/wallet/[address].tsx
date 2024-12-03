@@ -82,6 +82,8 @@ interface TokenDistribution {
     profit: boolean;
 }
 
+const API_URL = 'https://api-production-0673.up.railway.app';
+
 export default function WalletDetails() {
     const router = useRouter();
     const { address } = router.query;
@@ -102,18 +104,31 @@ export default function WalletDetails() {
             setLoading(true);
             setError(null);
 
-            // Get data from Cielo API
-            const response = await fetch(
-                `https://feed-api.cielo.finance/v1/pnl/tokens?wallet=${address}&skip_unrealized_pnl=true&days=${timeframe}&page=1`,
-                { headers: API_HEADERS }
-            );
+            // First try to get data from our database
+            const dbResponse = await fetch(`${API_URL}/wallets/${address}`);
+            let walletInfo = null;
 
-            if (!response.ok) {
+            if (dbResponse.ok) {
+                walletInfo = await dbResponse.json();
+            }
+
+            // Get Cielo data
+            const cieloResponse = await fetch(`${API_URL}/proxy/cielo/${address}`);
+            if (!cieloResponse.ok) {
                 throw new Error('Failed to fetch wallet data');
             }
 
-            const data = await response.json();
-            setWalletData(data.data);
+            const cieloData = await cieloResponse.json();
+            if (!cieloData.success) {
+                throw new Error('Failed to fetch Cielo data');
+            }
+
+            // Combine data
+            setWalletData({
+                ...(walletInfo || {}),
+                ...cieloData.data,
+                address: address as string
+            });
 
         } catch (err: any) {
             setError(err.message);
@@ -284,7 +299,7 @@ export default function WalletDetails() {
                                         <YAxis 
                                             stroke="#9CA3AF"
                                             tick={{ fontSize: 12 }}
-                                            tickFormatter={(value) => `$${value}`}
+                                            tickFormatter={(value: number) => `$${value.toLocaleString()}`}
                                         />
                                         <Tooltip
                                             contentStyle={{
@@ -322,7 +337,8 @@ export default function WalletDetails() {
                                             cx="50%"
                                             cy="50%"
                                             labelLine={false}
-                                            label={({ name, value }) => `${name}: $${value.toFixed(2)}`}
+                                            label={({ name, value }: { name: string; value: number }) => 
+                                                `${name}: $${value.toLocaleString()}`}
                                             outerRadius={80}
                                             fill="#8884d8"
                                             dataKey="value"

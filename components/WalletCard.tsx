@@ -4,7 +4,8 @@ import {
     TrendingUp, TrendingDown, Activity, DollarSign, 
     BarChart2, AlertTriangle, Eye, RefreshCw,
     ExternalLink, ChevronDown, ChevronUp, Wallet,
-    Award, Target, Sparkles, BarChart, Clock
+    Award, Target, Sparkles, BarChart, Clock,
+    Shield
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -80,12 +81,40 @@ interface WalletData {
 
 interface CieloData {
     total_pnl_usd: number;
+    total_unrealized_pnl_usd: number;
     winrate: number;
     total_tokens_traded: number;
     total_roi_percentage: number;
-    total_volume_24h?: number;
-    avg_trade_size?: number;
-    tokens: CieloToken[];
+    total_unrealized_roi_percentage: number;
+    combined_pnl_usd: number;
+    combined_roi_percentage: number;
+    tokens: Array<{
+        num_swaps: number;
+        total_buy_usd: number;
+        total_buy_amount: number;
+        total_sell_usd: number;
+        total_sell_amount: number;
+        average_buy_price: number;
+        average_sell_price: number;
+        total_pnl_usd: number;
+        unrealized_pnl_usd: number;
+        token_price_usd: number;
+        roi_percentage: number;
+        unrealized_roi_percentage: number;
+        token_address: string;
+        token_symbol: string;
+        token_name: string;
+        chain: string;
+        first_trade: number;
+        last_trade: number;
+        is_honeypot: boolean;
+        chart_link: string;
+    }>;
+    paging: {
+        total_pages: number;
+        total_rows: number;
+        total_rows_in_page: number;
+    };
 }
 
 interface WalletProps {
@@ -107,6 +136,9 @@ export default function WalletCard({ wallet, onRefresh }: WalletProps) {
             const result = await response.json();
             if (result.success && result.data) {
                 setCieloData(result.data);
+                if (onRefresh) {
+                    onRefresh();
+                }
             }
         } catch (error) {
             console.error('Error fetching Cielo data:', error);
@@ -124,22 +156,9 @@ export default function WalletCard({ wallet, onRefresh }: WalletProps) {
     const handleRefresh = async () => {
         try {
             setRefreshing(true);
-            const response = await fetch(`https://api-production-0673.up.railway.app/proxy/cielo/${wallet.address}`);
-            if (!response.ok) {
-                throw new Error(`Failed to refresh: ${response.statusText}`);
-            }
-            const result = await response.json();
-            if (result.success) {
-                await fetchCieloData();
-            } else {
-                throw new Error(result.message || 'Failed to refresh data');
-            }
-            if (onRefresh) {
-                await onRefresh();
-            }
+            await fetchCieloData();
         } catch (error) {
             console.error('Error refreshing wallet:', error);
-            // Optionally show error to user
         } finally {
             setRefreshing(false);
         }
@@ -365,29 +384,176 @@ export default function WalletCard({ wallet, onRefresh }: WalletProps) {
                     <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
-                        className="mt-4 pt-4 border-t border-gray-700"
+                        className="mt-4 pt-4 border-t border-gray-700 space-y-4"
                     >
-                        <h4 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
-                            <Clock size={16} className="text-blue-400" />
-                            Recent Activity
-                        </h4>
-                        <div className="space-y-2">
-                            {(wallet.token_metrics || []).slice(0, 3).map((token, index) => (
-                                <div 
-                                    key={index}
-                                    className="flex justify-between items-center bg-gray-700/30 rounded-lg p-2"
-                                >
-                                    <span className="text-gray-300">{token.symbol}</span>
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-sm text-gray-400">
-                                            {token.num_swaps} trades
-                                        </span>
-                                        <span className={`${token.roi_percentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                            {token.roi_percentage.toFixed(1)}%
-                                        </span>
-                                    </div>
+                        {/* Token Performance */}
+                        <div>
+                            <h4 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+                                <BarChart size={16} className="text-blue-400" />
+                                Token Performance
+                            </h4>
+                            <div className="space-y-2">
+                                {(cieloData?.tokens || wallet.token_metrics || [])
+                                    .sort((a: TokenMetric | CieloToken, b: TokenMetric | CieloToken) => {
+                                        const aPnl = 'total_pnl_usd' in a ? a.total_pnl_usd : 0;
+                                        const bPnl = 'total_pnl_usd' in b ? b.total_pnl_usd : 0;
+                                        return bPnl - aPnl;
+                                    })
+                                    .slice(0, 5)
+                                    .map((token: TokenMetric | CieloToken, index: number) => (
+                                        <div 
+                                            key={index}
+                                            className="flex justify-between items-center bg-gray-700/30 rounded-lg p-3"
+                                        >
+                                            <div>
+                                                <span className="text-white font-medium">
+                                                    {token.token_symbol || token.symbol}
+                                                </span>
+                                                <div className="text-xs text-gray-400 mt-1">
+                                                    {token.num_swaps || token.trades || 0} trades
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className={`${(token.total_pnl_usd || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                    ${(token.total_pnl_usd || 0).toLocaleString()}
+                                                </div>
+                                                <div className={`text-xs ${(token.roi_percentage || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                    {(token.roi_percentage || 0).toFixed(1)}% ROI
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                }
+                            </div>
+                        </div>
+
+                        {/* Trade Analysis */}
+                        <div className="bg-gray-700/30 rounded-lg p-4">
+                            <h4 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+                                <Activity size={16} className="text-blue-400" />
+                                Trade Analysis
+                            </h4>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <span className="text-xs text-gray-400">Avg Buy Size</span>
+                                    <p className="text-base text-white">
+                                        ${((cieloData?.tokens || []).reduce((acc: number, t: CieloToken) => acc + t.total_buy_usd, 0) / 
+                                          (cieloData?.tokens || []).length || 0).toFixed(2)}
+                                    </p>
                                 </div>
-                            ))}
+                                <div>
+                                    <span className="text-xs text-gray-400">Avg Sell Size</span>
+                                    <p className="text-base text-white">
+                                        ${((cieloData?.tokens || []).reduce((acc, t) => acc + t.total_sell_usd, 0) / 
+                                          (cieloData?.tokens || []).length || 0).toFixed(2)}
+                                    </p>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-gray-400">Win Rate</span>
+                                    <p className="text-base text-white">
+                                        {cieloData?.winrate.toFixed(1) || wallet.winrate.toFixed(1)}%
+                                    </p>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-gray-400">Total Tokens</span>
+                                    <p className="text-base text-white">
+                                        {cieloData?.total_tokens_traded || wallet.token_metrics?.length || 0}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Risk Metrics */}
+                        <div className="bg-gray-700/30 rounded-lg p-4">
+                            <h4 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+                                <Shield size={16} className="text-blue-400" />
+                                Risk Profile
+                            </h4>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <span className="text-xs text-gray-400">Risk Rating</span>
+                                    <p className={`text-base ${getRiskColor(wallet.risk_metrics?.risk_rating)}`}>
+                                        {wallet.risk_metrics?.risk_rating || 'Medium'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-gray-400">Max Drawdown</span>
+                                    <p className={`text-base ${
+                                        (wallet.risk_metrics?.max_drawdown || 0) <= 20 ? 'text-green-400' : 
+                                        (wallet.risk_metrics?.max_drawdown || 0) <= 40 ? 'text-yellow-400' : 
+                                        'text-red-400'
+                                    }`}>
+                                        {wallet.risk_metrics?.max_drawdown?.toFixed(2) || '0'}%
+                                    </p>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-gray-400">Sharpe Ratio</span>
+                                    <p className="text-base text-white">
+                                        {wallet.risk_metrics?.sharpe_ratio?.toFixed(2) || '0'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-gray-400">Volatility</span>
+                                    <p className="text-base text-white">
+                                        {wallet.risk_metrics?.volatility?.toFixed(2) || '0'}%
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Performance Scores */}
+                        <div className="bg-gray-700/30 rounded-lg p-4">
+                            <h4 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+                                <Target size={16} className="text-blue-400" />
+                                Performance Scores
+                            </h4>
+                            <div className="grid grid-cols-3 gap-4">
+                                <div>
+                                    <span className="text-xs text-gray-400">ROI Score</span>
+                                    <p className={`text-base ${wallet.roi_score >= 75 ? 'text-green-400' : 
+                                        wallet.roi_score >= 50 ? 'text-yellow-400' : 'text-red-400'}`}>
+                                        {wallet.roi_score?.toFixed(1) || '0'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-gray-400">Consistency</span>
+                                    <p className={`text-base ${wallet.consistency_score >= 75 ? 'text-green-400' : 
+                                        wallet.consistency_score >= 50 ? 'text-yellow-400' : 'text-red-400'}`}>
+                                        {wallet.consistency_score?.toFixed(1) || '0'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-gray-400">Volume Score</span>
+                                    <p className={`text-base ${wallet.volume_score >= 75 ? 'text-green-400' : 
+                                        wallet.volume_score >= 50 ? 'text-yellow-400' : 'text-red-400'}`}>
+                                        {wallet.volume_score?.toFixed(1) || '0'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Links */}
+                        <div className="flex gap-2">
+                            <a
+                                href={`https://solscan.io/account/${wallet.address}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 px-4 py-2 bg-gray-700/50 rounded-lg text-gray-300 hover:bg-gray-700 transition-colors"
+                            >
+                                <ExternalLink size={16} />
+                                View on Explorer
+                            </a>
+                            {cieloData?.tokens[0]?.chart_link && (
+                                <a
+                                    href={cieloData.tokens[0].chart_link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 px-4 py-2 bg-gray-700/50 rounded-lg text-gray-300 hover:bg-gray-700 transition-colors"
+                                >
+                                    <BarChart2 size={16} />
+                                    View Chart
+                                </a>
+                            )}
                         </div>
                     </motion.div>
                 )}
