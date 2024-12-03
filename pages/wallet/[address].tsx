@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import type { ReactNode } from 'react';
 import { 
     ArrowUpRight, ArrowDownRight, Activity,
     DollarSign, TrendingUp,

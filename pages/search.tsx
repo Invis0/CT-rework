@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search as SearchIcon, AlertCircle } from 'lucide-react';
+import { 
+    Search as SearchIcon, AlertCircle, DollarSign,
+    Activity, TrendingUp, BarChart2
+} from 'lucide-react';
+import type { ReactNode } from 'react';
 import Sidebar from '../components/Sidebar';
 import WalletCard from '../components/WalletCard';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
