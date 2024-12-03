@@ -129,59 +129,48 @@ export default function Dashboard() {
 
             // Transform wallet data to match WalletData interface
             const transformedWallets = walletsData.map((wallet: any) => ({
-                address: wallet.address,
-                total_pnl_usd: wallet.total_pnl_usd || 0,
-                winrate: wallet.winrate || 0,
-                total_trades: wallet.total_trades || 0,
-                roi_percentage: wallet.roi_percentage || 0,
-                avg_trade_size: wallet.avg_trade_size || 0,
-                total_volume: wallet.total_volume || 0,
+                address: wallet.address || wallet.wallet_address, // Handle both possible field names
+                total_pnl_usd: Number(wallet.total_pnl || wallet.total_pnl_usd || 0),
+                winrate: Number(wallet.win_rate || wallet.winrate || 0),
+                total_trades: Number(wallet.trade_count || wallet.total_trades || 0),
+                roi_percentage: Number(wallet.roi || wallet.roi_percentage || 0),
+                avg_trade_size: Number(wallet.avg_trade_size || 0),
+                total_volume: Number(wallet.volume || wallet.total_volume || 0),
                 last_updated: wallet.last_updated || new Date().toISOString(),
-                consistency_score: wallet.consistency_score || 0,
-                token_metrics: wallet.token_metrics || [],
+                consistency_score: Number(wallet.consistency_score || 0),
+                token_metrics: Array.isArray(wallet.tokens) ? wallet.tokens : (wallet.token_metrics || []),
                 risk_metrics: wallet.risk_metrics || {
-                    max_drawdown: 0,
-                    sharpe_ratio: 0,
-                    sortino_ratio: 0,
-                    risk_rating: 'Medium',
-                    volatility: 0
+                    max_drawdown: Number(wallet.max_drawdown || 0),
+                    sharpe_ratio: Number(wallet.sharpe_ratio || 0),
+                    sortino_ratio: Number(wallet.sortino_ratio || 0),
+                    risk_rating: wallet.risk_rating || 'Medium',
+                    volatility: Number(wallet.volatility || 0)
                 },
-                total_score: wallet.total_score || 0,
-                roi_score: wallet.roi_score || 0,
-                volume_score: wallet.volume_score || 0,
-                risk_score: wallet.risk_score || 0,
-                max_drawdown: wallet.max_drawdown || 0,
-                last_trade_time: wallet.last_trade_time || new Date().toISOString(),
-                total_volume_24h: wallet.total_volume_24h || 0,
-                total_pnl_24h: wallet.total_pnl_24h || 0,
-                analytics: wallet.analytics || {
-                    avg_hold_time_hours: 0,
-                    avg_swaps_per_token: 0,
-                    avg_buy_size: 0,
-                    risk_metrics: {
-                        max_drawdown: 0,
-                        sharpe_ratio: 0,
-                        volatility: 0,
-                        risk_rating: 'Medium'
-                    },
-                    is_copyworthy: false,
-                    copyworthy_reasons: []
-                }
+                total_score: Number(wallet.total_score || wallet.scores?.total_score || 0),
+                roi_score: Number(wallet.roi_score || wallet.scores?.roi_score || 0),
+                volume_score: Number(wallet.volume_score || wallet.scores?.volume_score || 0),
+                risk_score: Number(wallet.risk_score || wallet.scores?.risk_score || 0),
+                max_drawdown: Number(wallet.max_drawdown || 0),
+                last_trade_time: wallet.last_trade_time || wallet.last_updated || new Date().toISOString(),
+                total_volume_24h: Number(wallet.total_volume_24h || 0),
+                total_pnl_24h: Number(wallet.total_pnl_24h || 0),
+                analytics: wallet.analytics || null
             }));
 
+            console.log('Transformed Wallets:', transformedWallets); // Debug log
             setTopWallets(transformedWallets);
 
             if (statsData) {
                 setStats({
-                    total_wallets: statsData.total_wallets || 0,
-                    total_volume: statsData.total_volume || 0,
-                    total_trades: statsData.total_trades || 0,
-                    avg_roi: statsData.average_roi || 0,
+                    total_wallets: Number(statsData.total_wallets || 0),
+                    total_volume: Number(statsData.total_volume || 0),
+                    total_trades: Number(statsData.total_trades || 0),
+                    avg_roi: Number(statsData.average_roi || statsData.avg_roi || 0),
                     change: {
-                        wallets: statsData.trends?.[0]?.wallet_count_change || 0,
-                        volume: statsData.trends?.[0]?.volume_change || 0,
-                        trades: statsData.trends?.[0]?.trades_change || 0,
-                        roi: statsData.trends?.[0]?.roi_change || 0
+                        wallets: Number(statsData.trends?.[0]?.wallet_count_change || 0),
+                        volume: Number(statsData.trends?.[0]?.volume_change || 0),
+                        trades: Number(statsData.trends?.[0]?.trades_change || 0),
+                        roi: Number(statsData.trends?.[0]?.roi_change || 0)
                     }
                 });
             }
