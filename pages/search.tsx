@@ -4,7 +4,7 @@ import {
     Search as SearchIcon, AlertCircle, DollarSign,
     Activity, TrendingUp, BarChart2
 } from 'lucide-react';
-import type { ReactNode } from 'react';
+import type { ReactNode, ChangeEvent } from 'react';
 import Sidebar from '../components/Sidebar';
 import WalletCard from '../components/WalletCard';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -79,6 +79,13 @@ interface WalletData {
     consistency_score: number;
     token_metrics: TokenMetric[];
     analytics?: WalletAnalytics;
+    roi_score: number;
+    volume_score: number;
+    risk_score: number;
+    max_drawdown: number;
+    last_trade_time: string;
+    total_volume_24h?: number;
+    total_pnl_24h?: number;
 }
 
 export default function SearchWallet() {
@@ -123,6 +130,11 @@ export default function SearchWallet() {
                     total_volume: cieloData.data.total_volume || 0,
                     last_updated: new Date().toISOString(),
                     consistency_score: 0,
+                    roi_score: 0,
+                    volume_score: 0,
+                    risk_score: 0,
+                    max_drawdown: 0,
+                    last_trade_time: new Date().toISOString(),
                     token_metrics: cieloData.data.tokens?.map((token: any) => ({
                         symbol: token.token_symbol,
                         token_address: token.token_address,
@@ -185,7 +197,7 @@ export default function SearchWallet() {
                             type="text"
                             placeholder="Enter wallet address..."
                             value={address}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddress(e.target.value)}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) => setAddress(e.target.value)}
                             className="flex-1 px-4 py-2 bg-gray-800 rounded-lg text-white border border-gray-700 focus:outline-none focus:border-blue-500"
                         />
                         <button
@@ -351,7 +363,7 @@ interface StatCardProps {
     title: string;
     value: string;
     trend?: boolean;
-    icon?: React.ReactNode;
+    icon?: ReactNode;
     subtitle?: string;
 }
 

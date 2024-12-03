@@ -10,6 +10,21 @@ declare module 'react' {
     export const createContext: <T>(defaultValue: T) => React.Context<T>;
     export const useRef: <T>(initialValue: T) => { current: T };
     export const useMemo: <T>(factory: () => T, deps: ReadonlyArray<any>) => T;
+
+    export interface ChangeEvent<T = Element> {
+        target: T;
+        currentTarget: T;
+    }
+
+    export type ReactNode = 
+        | string
+        | number
+        | boolean
+        | null
+        | undefined
+        | React.ReactElement
+        | React.ReactFragment
+        | React.ReactPortal;
 }
 
 declare module 'react/jsx-runtime';
@@ -19,7 +34,6 @@ declare module 'next/link';
 declare module 'lucide-react';
 declare module '@vercel/analytics/react';
 declare module 'recharts';
-
 declare module 'clsx';
 declare module 'tailwind-merge';
 
