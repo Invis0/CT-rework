@@ -44,6 +44,9 @@ interface WalletData {
     roi_score: number;
     volume_score: number;
     risk_score: number;
+    max_drawdown: number;
+    last_trade_time: string;
+    token_stats?: any[];
 }
 
 interface CieloData {
@@ -51,6 +54,8 @@ interface CieloData {
     winrate: number;
     total_tokens_traded: number;
     total_roi_percentage: number;
+    total_volume_24h?: number;
+    avg_trade_size?: number;
     tokens: Array<{
         num_swaps: number;
         total_buy_usd: number;
@@ -153,6 +158,15 @@ export default function WalletCard({ wallet, onRefresh }: WalletProps) {
                 return 'text-gray-400';
         }
     };
+
+    const formatTimeAgo = (date: string) => {
+        const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
+        if (seconds < 60) return `${seconds}s ago`;
+        if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+        if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+        return `${Math.floor(seconds / 86400)}d ago`;
+    };
+
     return (
         <motion.div
             layout
@@ -262,8 +276,8 @@ export default function WalletCard({ wallet, onRefresh }: WalletProps) {
                     <div className="flex justify-between items-center text-sm mt-2">
                         <span className="text-gray-400">Max Drawdown</span>
                         <span className={`font-medium ${
-                            wallet.max_drawdown <= 20 ? 'text-green-400' : 
-                            wallet.max_drawdown <= 40 ? 'text-yellow-400' : 
+                            (wallet.max_drawdown || 0) <= 20 ? 'text-green-400' : 
+                            (wallet.max_drawdown || 0) <= 40 ? 'text-yellow-400' : 
                             'text-red-400'
                         }`}>
                             {wallet.max_drawdown?.toFixed(2) || '0.00'}%
@@ -323,7 +337,7 @@ export default function WalletCard({ wallet, onRefresh }: WalletProps) {
                             Recent Activity
                         </h4>
                         <div className="space-y-2">
-                            {(cieloData?.tokens || wallet.token_stats)?.slice(0, 3).map((token: any, index: number) => (
+                            {(cieloData?.tokens || wallet.token_stats || []).slice(0, 3).map((token: any, index: number) => (
                                 <div 
                                     key={index}
                                     className="flex justify-between items-center bg-gray-700/30 rounded-lg p-2"
@@ -331,10 +345,10 @@ export default function WalletCard({ wallet, onRefresh }: WalletProps) {
                                     <span className="text-gray-300">{token.token_symbol || token.symbol}</span>
                                     <div className="flex items-center gap-4">
                                         <span className="text-sm text-gray-400">
-                                            {token.num_swaps || token.trades} trades
+                                            {token.num_swaps || token.trades || 0} trades
                                         </span>
-                                        <span className={`${(token.roi_percentage || token.roi) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                            {(token.roi_percentage || token.roi)?.toFixed(1)}%
+                                        <span className={`${(token.roi_percentage || token.roi || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                            {(token.roi_percentage || token.roi || 0).toFixed(1)}%
                                         </span>
                                     </div>
                                 </div>
