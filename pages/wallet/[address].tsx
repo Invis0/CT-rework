@@ -176,7 +176,7 @@ export default function WalletDetails() {
         pnl: day.pnl_usd,
     })) || [];
 
-    const tokenDistributionData = walletData.tokens?.map((token): TokenDistribution => ({
+    const tokenDistributionData = walletData.tokens?.map((token: WalletDetailsData['tokens'][0]): TokenDistribution => ({
         name: token.token_symbol,
         value: Math.abs(token.total_pnl_usd),
         profit: token.total_pnl_usd > 0,

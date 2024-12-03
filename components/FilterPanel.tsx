@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Filter, X, ChevronDown, ChevronUp, 
     TrendingUp, Clock, Activity, 
-    Shield, Coins 
+    Shield 
 } from 'lucide-react';
 
 export interface FilterCriteria {
