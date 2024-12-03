@@ -2,11 +2,24 @@
 /// <reference types="next/image-types/global" />
 
 declare module 'react' {
-    interface ReactNode {
-        children?: ReactNode | undefined;
-        type?: any;
-        props?: any;
-    }
+    export type ReactNode = 
+        | string
+        | number
+        | boolean
+        | null
+        | undefined
+        | React.ReactElement
+        | React.ReactFragment
+        | React.ReactPortal
+        | React.PromiseLikeOfReactNode;
+
+    export const useState: any;
+    export const useEffect: any;
+    export const useCallback: any;
+    export const useMemo: any;
+    export const useRef: any;
+    export const createContext: any;
+    export const useContext: any;
 }
 
 declare module 'react/jsx-runtime';

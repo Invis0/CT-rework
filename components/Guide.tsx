@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Maximize2, MessageCircle } from 'lucide-react';
+import { X, MessageCircle } from 'lucide-react';
 
 interface GuideProps {
   isMinimized: boolean;
