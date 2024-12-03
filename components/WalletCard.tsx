@@ -141,7 +141,18 @@ export default function WalletCard({ wallet, onRefresh }: WalletProps) {
         }
         return wallet.token_metrics;
     };
-
+    const getRiskColor = (rating: string | undefined) => {
+        switch(rating) {
+            case 'Low':
+                return 'text-green-500';
+            case 'Medium':
+                return 'text-yellow-500';
+            case 'High':
+                return 'text-red-400';
+            default:
+                return 'text-gray-400';
+        }
+    };
     return (
         <motion.div
             layout
@@ -243,7 +254,7 @@ export default function WalletCard({ wallet, onRefresh }: WalletProps) {
                 <div className="p-4 bg-gray-700/50 rounded-lg mb-4">
                     <div className="flex justify-between items-center text-sm">
                         <span className="text-gray-400">Risk Level</span>
-                        <span className={riskColor}>
+                        <span className={getRiskColor(wallet.risk_metrics?.risk_rating)}>
                             {wallet.risk_metrics?.risk_rating || 'Analyzing...'}
                         </span>
                     </div>

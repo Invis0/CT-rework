@@ -1,29 +1,16 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, AlertCircle } from 'lucide-react';
+import { Search as SearchIcon, AlertCircle } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
+import WalletCard from '../components/WalletCard';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-
-// Headers for Cielo API
-const API_HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0',
-    'Accept': '*/*',
-    'Accept-Language': 'en-US,en;q=0.5',
-    'Referer': 'https://app.cielo.finance/',
-    'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhZGRyZXNzIjoiMHhiZWQ2NGExN2Q1ZGZlZjI4YWJhNzI0MTFhZWQzNjE0OGM2MWM1ODRjIiwiaXNzIjoiaHR0cHM6Ly9hcGkudW5pd2hhbGVzLmlvLyIsInN1YiI6InVzZXIiLCJwbGFuIjoiYmFzaWMiLCJiYWxhbmNlIjowLCJpYXQiOjE3MzMxNTE3OTIsImV4cCI6MTczMzE2MjU5Mn0.H6rkOlRc9QVmQdCB3vQJSS-W2oI9h5YT0y-pQ39GbEA',
-    'API-KEY': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0aW1lc3RhbXAiOjE3MzMxNTE3OTF9.Z7Js5Iod36N6seb1ExekMmIjqGUlkvlOU_6xOZ5KCig',
-    'Origin': 'https://app.cielo.finance',
-    'Connection': 'keep-alive',
-    'Sec-Fetch-Dest': 'empty',
-    'Sec-Fetch-Mode': 'cors',
-    'Sec-Fetch-Site': 'cross-site',
-};
 
 export default function SearchWallet() {
     const [address, setAddress] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [walletData, setWalletData] = useState<any>(null);
+    const [cieloData, setCieloData] = useState<any>(null);
 
     const searchWallet = async () => {
         if (!address) {
@@ -35,24 +22,39 @@ export default function SearchWallet() {
         setError(null);
         
         try {
-            const response = await fetch(
-                `https://feed-api.cielo.finance/v1/pnl/tokens?wallet=${address}&skip_unrealized_pnl=true&days=7d&page=1`,
-                { headers: API_HEADERS }
-            );
+            // Fetch data from both APIs in parallel
+            const [dbResponse, cieloResponse] = await Promise.all([
+                fetch(`https://api-production-0673.up.railway.app/wallets/${address}`),
+                fetch(`https://api-production-0673.up.railway.app/proxy/cielo/${address}`)
+            ]);
 
-            if (!response.ok) {
-                throw new Error('Failed to fetch wallet data');
+            if (!dbResponse.ok) throw new Error('Failed to fetch wallet data');
+            const dbData = await dbResponse.json();
+
+            let cieloResult;
+            if (cieloResponse.ok) {
+                const cieloData = await cieloResponse.json();
+                if (cieloData.success) {
+                    cieloResult = cieloData.data;
+                    setCieloData(cieloData.data);
+                }
             }
 
-            const data = await response.json();
-            setWalletData(data.data);
+            // Combine data from both sources
+            const combinedData = {
+                ...dbData,
+                ...(cieloResult && {
+                    total_volume_24h: cieloResult.total_volume_24h,
+                    total_pnl_24h: cieloResult.total_pnl_24h,
+                    additional_metrics: cieloResult.tokens
+                })
+            };
+
+            setWalletData(combinedData);
             
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                setError(error.message);
-            } else {
-                setError('An unknown error occurred');
-            }
+        } catch (error: any) {
+            setError(error.message);
+            console.error('Search error:', error);
         } finally {
             setLoading(false);
         }
@@ -80,7 +82,7 @@ export default function SearchWallet() {
                             disabled={loading}
                             className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 flex items-center gap-2"
                         >
-                            <Search size={20} />
+                            <SearchIcon size={20} />
                             {loading ? 'Searching...' : 'Search'}
                         </button>
                     </div>
@@ -95,106 +97,4 @@ export default function SearchWallet() {
                     {walletData && (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="space-y-6"
-                        >
-                            {/* Overview Stats */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                <StatCard
-                                    title="Total PNL"
-                                    value={`$${walletData.total_pnl_usd?.toLocaleString() ?? 0}`}
-                                    trend={walletData.total_pnl_usd > 0}
-                                />
-                                <StatCard
-                                    title="Win Rate"
-                                    value={`${walletData.winrate?.toFixed(1) ?? 0}%`}
-                                    trend={walletData.winrate > 50}
-                                />
-                                <StatCard
-                                    title="Total Trades"
-                                    value={walletData.total_tokens_traded?.toString() ?? '0'}
-                                />
-                                <StatCard
-                                    title="ROI"
-                                    value={`${walletData.total_roi_percentage?.toFixed(2) ?? 0}%`}
-                                    trend={walletData.total_roi_percentage > 0}
-                                />
-                            </div>
-
-                            {/* Token Performance */}
-                            <div className="bg-gray-800 rounded-lg p-6">
-                                <h2 className="text-xl font-semibold text-white mb-4">Token Performance</h2>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full">
-                                        <thead>
-                                            <tr className="text-left text-gray-400">
-                                                <th className="px-6 py-3">Token</th>
-                                                <th className="px-6 py-3">ROI</th>
-                                                <th className="px-6 py-3">Buy Volume</th>
-                                                <th className="px-6 py-3">Sell Volume</th>
-                                                <th className="px-6 py-3">Trades</th>
-                                                <th className="px-6 py-3">Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {walletData.tokens?.map((token: any, index: number) => (
-                                                <tr key={index} className="border-t border-gray-700">
-                                                    <td className="px-6 py-4 text-white">
-                                                        {token.token_symbol}
-                                                    </td>
-                                                    <td className={`px-6 py-4 ${
-                                                        token.roi_percentage >= 0 ? 'text-green-400' : 'text-red-400'
-                                                    }`}>
-                                                        {token.roi_percentage?.toFixed(2)}%
-                                                    </td>
-                                                    <td className="px-6 py-4 text-white">
-                                                        ${token.total_buy_usd?.toLocaleString()}
-                                                    </td>
-                                                    <td className="px-6 py-4 text-white">
-                                                        ${token.total_sell_usd?.toLocaleString()}
-                                                    </td>
-                                                    <td className="px-6 py-4 text-white">
-                                                        {token.num_swaps}
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <span className={`px-2 py-1 rounded-full text-xs ${
-                                                            token.is_honeypot
-                                                                ? 'bg-red-500/20 text-red-400'
-                                                                : 'bg-green-500/20 text-green-400'
-                                                        }`}>
-                                                            {token.is_honeypot ? 'Honeypot' : 'Safe'}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-                </div>
-            </main>
-        </div>
-    );
-}
-
-interface StatCardProps {
-    title: string;
-    value: string;
-    trend?: boolean;
-}
-
-function StatCard({ title, value, trend }: StatCardProps) {
-    return (
-        <div className="bg-gray-800 rounded-lg p-6">
-            <p className="text-gray-400 text-sm">{title}</p>
-            <p className="text-2xl font-bold text-white mt-2">{value}</p>
-            {typeof trend !== 'undefined' && (
-                <p className={`text-sm mt-2 ${trend ? 'text-green-400' : 'text-red-400'}`}>
-                    {trend ? '↑' : '↓'} {trend ? 'Positive' : 'Negative'}
-                </p>
-            )}
-        </div>
-    );
-}
+                            animate={{ opacity:
