@@ -7,14 +7,33 @@ import {
 } from 'recharts';
 import { 
     Wallet, TrendingUp, Award, 
-    AlertTriangle, Search, Loader2
+    AlertTriangle, Search
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
-import WalletList from '../components/WalletList';
+import WalletCard from '../components/WalletCard';
 import { Alert, AlertTitle, AlertDescription } from '../components/ui/alert';
 import { Analytics } from "@vercel/analytics/react";
+// API base URL
+const API_URL = 'http://localhost:8000';
+
+interface WalletData {
+    address: string;
+    total_score: number;
+    roi_score: number;
+    consistency_score: number;
+    volume_score: number;
+    risk_score: number;
+    trade_count: number;
+    win_rate: number;
+    avg_profit: number;
+    max_drawdown: number;
+    sharpe_ratio: number;
+    token_stats: any[];
+    risk_metrics: any;
+}
 
 export default function Dashboard() {
+    const [topWallets, setTopWallets] = useState<WalletData[]>([]);
     const [stats, setStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -24,7 +43,6 @@ export default function Dashboard() {
         minWinRate: 50,
         minTrades: 20
     });
-    const [initialWallets, setInitialWallets] = useState([]);
 
     useEffect(() => {
         fetchData();
@@ -36,11 +54,7 @@ export default function Dashboard() {
             setError(null);
 
             const [walletsResponse, statsResponse] = await Promise.all([
-                fetch(`https://api-production-0673.up.railway.app/wallets/top?` +
-                      `min_roi=${selectedMetrics.minRoi}&` +
-                      `min_win_rate=${selectedMetrics.minWinRate}&` +
-                      `min_trades=${selectedMetrics.minTrades}&` +
-                      `page=1&limit=50`),
+                fetch(`https://api-production-0673.up.railway.app/wallets/top?min_roi=${selectedMetrics.minRoi}&min_win_rate=${selectedMetrics.minWinRate}&min_trades=${selectedMetrics.minTrades}`),
                 fetch(`https://api-production-0673.up.railway.app/stats/overview`)
             ]);
 
@@ -53,7 +67,7 @@ export default function Dashboard() {
                 statsResponse.json()
             ]);
 
-            setInitialWallets(walletsData || []);
+            setTopWallets(walletsData || []);
             setStats(statsData);
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -62,6 +76,10 @@ export default function Dashboard() {
             setLoading(false);
         }
     };
+
+    const filteredWallets = topWallets.filter(wallet =>
+        wallet.address.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     return (
         <div className="flex h-screen bg-gray-900">
@@ -178,20 +196,33 @@ export default function Dashboard() {
                         </Alert>
                     )}
 
-                    {/* Wallet List with Infinite Scroll */}
-                    {loading ? (
-                        <div className="flex justify-center py-8">
-                            <Loader2 className="animate-spin text-blue-400" size={40} />
-                        </div>
-                    ) : (
-                        <WalletList 
-                            initialWallets={initialWallets} 
-                            filterCriteria={selectedMetrics}
-                        />
-                    )}
+                    {/* Wallet List */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+                    >
+                        {loading ? (
+                            <div className="col-span-2 flex justify-center">
+                                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                            </div>
+                        ) : filteredWallets.length > 0 ? (
+                            filteredWallets.map((wallet) => (
+                                <WalletCard key={wallet.address} wallet={wallet} />
+                            ))
+                        ) : (
+                            <div className="col-span-2">
+                                <Alert variant="destructive">
+                                    <AlertTitle>No wallets found</AlertTitle>
+                                    <AlertDescription>
+                                        Try adjusting your filter criteria or search term.
+                                    </AlertDescription>
+                                </Alert>
+                            </div>
+                        )}
+                    </motion.div>
                 </div>
             </main>
-            <Analytics />
         </div>
     );
 }
