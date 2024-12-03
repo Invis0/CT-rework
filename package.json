@@ -3,10 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "clean": "rm -rf .next node_modules package-lock.json && npm cache clean --force",
-    "fresh": "npm run clean && npm install",
-    "build": "npm run fresh && next build",
     "dev": "next dev",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
