@@ -15,9 +15,20 @@ import { Alert, AlertTitle, AlertDescription } from '../components/ui/alert';
 import { Analytics } from "@vercel/analytics/react";
 import { Guide } from '../components/Guide';
 import { SocialButtons } from '../components/SocialButtons';
-import { TokenMetric, WalletData } from '../types';
 // API base URL
-const API_URL = 'http://localhost:8000';
+const API_URL = 'https://api-production-0673.up.railway.app';
+
+interface TokenMetric {
+    symbol: string;
+    token_address: string;
+    num_swaps: number;
+    total_buy_usd: number;
+    total_sell_usd: number;
+    total_pnl_usd: number;
+    roi_percentage: number;
+    avg_position_size: number;
+    last_trade_time: string;
+}
 
 interface WalletData {
     address: string;
@@ -29,17 +40,7 @@ interface WalletData {
     total_volume: number;
     last_updated: string;
     consistency_score: number;
-    token_metrics: Array<{
-        symbol: string;
-        token_address: string;
-        num_swaps: number;
-        total_buy_usd: number;
-        total_sell_usd: number;
-        total_pnl_usd: number;
-        roi_percentage: number;
-        avg_position_size: number;
-        last_trade_time: string;
-    }>;
+    token_metrics: TokenMetric[];
     risk_metrics: {
         max_drawdown: number;
         sharpe_ratio: number;
@@ -55,16 +56,7 @@ interface WalletData {
     last_trade_time: string;
     total_volume_24h?: number;
     total_pnl_24h?: number;
-    additional_metrics?: Array<{
-        num_swaps: number;
-        total_buy_usd: number;
-        total_sell_usd: number;
-        total_pnl_usd: number;
-        roi_percentage: number;
-        token_symbol: string;
-        token_name: string;
-        is_honeypot: boolean;
-    }>;
+    analytics?: Analytics;
 }
 
 interface DashboardStats {
