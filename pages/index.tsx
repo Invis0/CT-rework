@@ -15,6 +15,7 @@ import { Alert, AlertTitle, AlertDescription } from '../components/ui/alert';
 import { Analytics } from "@vercel/analytics/react";
 import { Guide } from '../components/Guide';
 import { SocialButtons } from '../components/SocialButtons';
+import { TokenMetric, WalletData } from '@/types';
 // API base URL
 const API_URL = 'http://localhost:8000';
 
@@ -68,15 +69,22 @@ interface WalletData {
 
 interface DashboardStats {
     total_wallets: number;
-    average_roi: number;
-    top_performers: number;
-    average_winrate: number;
-    trends?: Array<{
-        wallet_count_change: number;
-        roi_change: number;
-        top_performers_change: number;
-        winrate_change: number;
-    }>;
+    total_volume: number;
+    total_trades: number;
+    avg_roi: number;
+    change: {
+        wallets: number;
+        volume: number;
+        trades: number;
+        roi: number;
+    };
+}
+
+interface StatCardProps {
+    title: string;
+    value: string;
+    icon: React.ReactNode;
+    change: number;
 }
 
 export default function Dashboard() {
@@ -170,25 +178,25 @@ export default function Dashboard() {
                                 title="Total Wallets"
                                 value={stats.total_wallets.toLocaleString()}
                                 icon={<Wallet className="text-blue-500" />}
-                                change={stats.trends?.[0]?.wallet_count_change || 0}
+                                change={stats.change.wallets}
                             />
                             <StatsCard
                                 title="Average ROI"
-                                value={`${stats.average_roi.toFixed(2)}%`}
+                                value={`${stats.avg_roi.toFixed(2)}%`}
                                 icon={<TrendingUp className="text-green-500" />}
-                                change={stats.trends?.[0]?.roi_change || 0}
+                                change={stats.change.roi}
                             />
                             <StatsCard
                                 title="Top Performers"
-                                value={stats.top_performers.toLocaleString()}
+                                value={stats.total_wallets.toLocaleString()}
                                 icon={<Award className="text-yellow-500" />}
-                                change={stats.trends?.[0]?.top_performers_change || 0}
+                                change={stats.change.wallets}
                             />
                             <StatsCard
                                 title="Avg Win Rate"
-                                value={`${stats.average_winrate.toFixed(1)}%`}
+                                value={`${stats.total_wallets.toLocaleString()}%`}
                                 icon={<AlertTriangle className="text-purple-500" />}
-                                change={stats.trends?.[0]?.winrate_change || 0}
+                                change={stats.change.wallets}
                             />
                         </motion.div>
                     )}
@@ -202,7 +210,7 @@ export default function Dashboard() {
                                 <input
                                     type="number"
                                     value={selectedMetrics.minRoi}
-                                    onChange={(e) => setSelectedMetrics({
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSelectedMetrics({
                                         ...selectedMetrics,
                                         minRoi: Number(e.target.value)
                                     })}
@@ -214,7 +222,7 @@ export default function Dashboard() {
                                 <input
                                     type="number"
                                     value={selectedMetrics.minWinRate}
-                                    onChange={(e) => setSelectedMetrics({
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSelectedMetrics({
                                         ...selectedMetrics,
                                         minWinRate: Number(e.target.value)
                                     })}
@@ -226,7 +234,7 @@ export default function Dashboard() {
                                 <input
                                     type="number"
                                     value={selectedMetrics.minTrades}
-                                    onChange={(e) => setSelectedMetrics({
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSelectedMetrics({
                                         ...selectedMetrics,
                                         minTrades: Number(e.target.value)
                                     })}
@@ -255,8 +263,14 @@ export default function Dashboard() {
                                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
                             </div>
                         ) : filteredWallets.length > 0 ? (
-                            filteredWallets.map((wallet) => (
-                                <WalletCard key={wallet.address} wallet={wallet} />
+                            filteredWallets.map((wallet: WalletData) => (
+                                <WalletCard 
+                                    key={wallet.address} 
+                                    wallet={wallet} 
+                                    onRefresh={async () => {
+                                        await fetchData();
+                                    }}
+                                />
                             ))
                         ) : (
                             <div className="col-span-2">

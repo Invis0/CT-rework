@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search as SearchIcon, AlertCircle, DollarSign, Activity, TrendingUp, BarChart2 } from 'lucide-react';
+import { Search as SearchIcon, AlertCircle } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import WalletCard from '../components/WalletCard';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { TokenMetric, WalletData, Analytics } from '@/types';
 
 interface CieloToken {
     num_swaps: number;
@@ -30,46 +31,8 @@ interface CieloResponse {
         total_roi_percentage: number;
         total_volume: number;
         total_pnl_usd: number;
+        analytics?: Analytics;
     };
-}
-
-interface WalletResponse {
-    address: string;
-    total_pnl_usd: number;
-    winrate: number;
-    total_trades: number;
-    roi_percentage: number;
-    avg_trade_size: number;
-    total_volume: number;
-    last_updated: string;
-    consistency_score: number;
-    token_metrics: Array<{
-        symbol: string;
-        token_address: string;
-        num_swaps: number;
-        total_buy_usd: number;
-        total_sell_usd: number;
-        total_pnl_usd: number;
-        roi_percentage: number;
-        avg_position_size: number;
-        last_trade_time: string;
-    }>;
-    risk_metrics: {
-        max_drawdown: number;
-        sharpe_ratio: number;
-        sortino_ratio: number;
-        risk_rating: 'Low' | 'Medium' | 'High';
-        volatility: number;
-    };
-    total_score: number;
-    roi_score: number;
-    volume_score: number;
-    risk_score: number;
-    max_drawdown: number;
-    last_trade_time: string;
-    total_volume_24h?: number;
-    total_pnl_24h?: number;
-    additional_metrics?: CieloToken[];
 }
 
 export default function SearchWallet() {
@@ -114,33 +77,33 @@ export default function SearchWallet() {
                     total_volume: cieloData.data.total_volume || 0,
                     last_updated: new Date().toISOString(),
                     consistency_score: 0,
-                    token_metrics: cieloData.data.tokens?.map((token: CieloToken) => ({
+                    token_metrics: cieloData.data.tokens?.map((token: any) => ({
                         symbol: token.token_symbol,
-                        token_address: '',
+                        token_address: token.token_address,
                         num_swaps: token.num_swaps,
                         total_buy_usd: token.total_buy_usd,
                         total_sell_usd: token.total_sell_usd,
                         total_pnl_usd: token.total_pnl_usd,
                         roi_percentage: token.roi_percentage,
-                        avg_position_size: 0,
-                        last_trade_time: new Date().toISOString()
+                        avg_position_size: token.average_buy_price * token.total_buy_amount,
+                        last_trade_time: new Date(token.last_trade * 1000).toISOString()
                     })) || [],
                     risk_metrics: {
-                        max_drawdown: 0,
-                        sharpe_ratio: 0,
+                        max_drawdown: cieloData.data.analytics?.risk_metrics.max_drawdown || 0,
+                        sharpe_ratio: cieloData.data.analytics?.risk_metrics.sharpe_ratio || 0,
                         sortino_ratio: 0,
-                        risk_rating: 'Medium',
-                        volatility: 0
+                        risk_rating: cieloData.data.analytics?.risk_metrics.risk_rating || 'Medium',
+                        volatility: cieloData.data.analytics?.risk_metrics.volatility || 0
                     },
                     total_score: 0,
                     roi_score: 0,
                     volume_score: 0,
                     risk_score: 0,
-                    max_drawdown: 0,
+                    max_drawdown: cieloData.data.analytics?.risk_metrics.max_drawdown || 0,
                     last_trade_time: new Date().toISOString(),
                     total_volume_24h: cieloData.data.total_volume_24h,
                     total_pnl_24h: cieloData.data.total_pnl_24h,
-                    additional_metrics: cieloData.data.tokens
+                    analytics: cieloData.data.analytics
                 };
 
                 setWalletData(transformedData);
@@ -165,7 +128,7 @@ export default function SearchWallet() {
                 ...(cieloResult && {
                     total_volume_24h: cieloResult.total_volume_24h,
                     total_pnl_24h: cieloResult.total_pnl_24h,
-                    additional_metrics: cieloResult.tokens
+                    analytics: cieloResult.analytics
                 })
             });
             
@@ -336,7 +299,7 @@ export default function SearchWallet() {
                                                     ...prev,
                                                     total_volume_24h: result.data.total_volume_24h,
                                                     total_pnl_24h: result.data.total_pnl_24h,
-                                                    additional_metrics: result.data.tokens
+                                                    analytics: result.data.analytics
                                                 } as WalletResponse;
                                             });
                                         }

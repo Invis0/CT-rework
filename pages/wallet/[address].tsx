@@ -7,7 +7,7 @@ import {
     ChevronLeft,
     BarChart2, Shield,
     Wallet, RefreshCw, ExternalLink,
-    PieChart, LineChart as LineChartIcon
+    PieChart, LineChart as LineChartIcon, Award, CheckCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import Sidebar from '../../components/Sidebar';
@@ -17,6 +17,8 @@ import {
     PieChart as RechartsPieChart, Pie, Cell 
 } from 'recharts';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { TokenMetric, WalletData, Analytics } from '@/types';
+import type { ReactNode } from 'react';
 
 // Cielo API headers
 const API_HEADERS = {
@@ -41,6 +43,7 @@ interface WalletDetailsData {
         date: string;
         pnl_usd: number;
     }>;
+    token_metrics: TokenMetric[];
     tokens: Array<{
         token_symbol: string;
         total_pnl_usd: number;
@@ -65,12 +68,25 @@ interface WalletDetailsData {
     avg_trade_size?: number;
     total_buy_usd: number;
     total_sell_usd: number;
+    analytics?: {
+        avg_hold_time_hours: number;
+        avg_swaps_per_token: number;
+        avg_buy_size: number;
+        risk_metrics: {
+            max_drawdown: number;
+            sharpe_ratio: number;
+            volatility: number;
+            risk_rating: 'Low' | 'Medium' | 'High';
+        };
+        is_copyworthy: boolean;
+        copyworthy_reasons: string[];
+    };
 }
 
 interface StatCardProps {
     title: string;
     value: string;
-    icon?: React.ReactNode;
+    icon?: ReactNode;
     trend?: boolean;
     subtitle?: string;
 }
@@ -260,216 +276,188 @@ export default function WalletDetails() {
                         />
                     </div>
 
-                    {/* Charts Section */}
-                    <div className="grid lg:grid-cols-2 gap-6 mb-8">
-                        {/* PnL Chart */}
-                        <div className="bg-gray-800 rounded-lg p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="flex items-center gap-2">
-                                    <LineChartIcon className="text-blue-400" size={20} />
-                                    <h2 className="text-lg font-semibold text-white">
-                                        Profit & Loss
-                                    </h2>
-                                </div>
-                                <div className="flex gap-2">
-                                    {['24h', '7d', '30d'].map((period) => (
-                                        <button
-                                            key={period}
-                                            onClick={() => setTimeframe(period)}
-                                            className={`px-3 py-1 rounded-lg text-sm ${
-                                                timeframe === period
-                                                    ? 'bg-blue-500 text-white'
-                                                    : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-                                            }`}
-                                        >
-                                            {period}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="h-64">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={dailyPnLData}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                                        <XAxis 
-                                            dataKey="date"
-                                            stroke="#9CA3AF"
-                                            tick={{ fontSize: 12 }}
-                                        />
-                                        <YAxis 
-                                            stroke="#9CA3AF"
-                                            tick={{ fontSize: 12 }}
-                                            tickFormatter={(value: number) => `$${value.toLocaleString()}`}
-                                        />
-                                        <Tooltip
-                                            contentStyle={{
-                                                backgroundColor: '#1F2937',
-                                                border: 'none',
-                                                borderRadius: '8px',
-                                                padding: '12px'
-                                            }}
-                                        />
-                                        <Line
-                                            type="monotone"
-                                            dataKey="pnl"
-                                            stroke="#3B82F6"
-                                            strokeWidth={2}
-                                            dot={false}
-                                        />
-                                    </LineChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
-
-                        {/* Token Distribution */}
-                        <div className="bg-gray-800 rounded-lg p-6">
-                            <div className="flex items-center gap-2 mb-6">
-                                <PieChart className="text-blue-400" size={20} />
-                                <h2 className="text-lg font-semibold text-white">
-                                    Token Distribution
+                    {/* Copy Trading Analysis */}
+                    {walletData?.analytics?.is_copyworthy && (
+                        <div className="bg-green-900/20 rounded-lg p-6 mb-8">
+                            <div className="flex items-center gap-2 mb-4">
+                                <Award className="text-green-400" size={24} />
+                                <h2 className="text-xl font-semibold text-white">
+                                    Recommended for Copy Trading
                                 </h2>
                             </div>
-                            <div className="h-64">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <RechartsPieChart>
-                                        <Pie
-                                            data={tokenDistributionData}
-                                            cx="50%"
-                                            cy="50%"
-                                            labelLine={false}
-                                            label={({ name, value }: { name: string; value: number }) => 
-                                                `${name}: $${value.toLocaleString()}`}
-                                            outerRadius={80}
-                                            fill="#8884d8"
-                                            dataKey="value"
-                                        >
-                                            {tokenDistributionData.map((entry: any, index: number) => (
-                                                <Cell 
-                                                    key={`cell-${index}`}
-                                                    fill={entry.profit ? '#10B981' : '#EF4444'} 
-                                                />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip
-                                            contentStyle={{
-                                                backgroundColor: '#1F2937',
-                                                border: 'none',
-                                                borderRadius: '8px',
-                                                padding: '12px'
-                                            }}
-                                        />
-                                    </RechartsPieChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Token Performance Table */}
-                    <div className="bg-gray-800 rounded-lg p-6">
-                        <h2 className="text-lg font-semibold text-white mb-6">Token Performance</h2>
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead>
-                                    <tr className="text-left text-gray-400 border-b border-gray-700">
-                                        <th className="pb-4">Token</th>
-                                        <th className="pb-4">ROI</th>
-                                        <th className="pb-4">Buy Volume</th>
-                                        <th className="pb-4">Sell Volume</th>
-                                        <th className="pb-4">Trades</th>
-                                        <th className="pb-4">Net Profit</th>
-                                        <th className="pb-4">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-700">
-                                    {walletData.tokens?.map((token: any, index: number) => (
-                                        <tr key={index} className="text-gray-300">
-                                            <td className="py-4">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-medium">{token.token_symbol}</span>
-                                                </div>
-                                            </td>
-                                            <td className={`py-4 ${
-                                                token.roi_percentage >= 0 ? 'text-green-400' : 'text-red-400'
-                                            }`}>
-                                                {token.roi_percentage?.toFixed(2)}%
-                                            </td>
-                                            <td className="py-4">
-                                                ${token.total_buy_usd?.toLocaleString()}
-                                            </td>
-                                            <td className="py-4">
-                                                ${token.total_sell_usd?.toLocaleString()}
-                                            </td>
-                                            <td className="py-4">{token.num_swaps}</td>
-                                            <td className={`py-4 ${
-                                                token.total_pnl_usd >= 0 ? 'text-green-400' : 'text-red-400'
-                                            }`}>
-                                                ${token.total_pnl_usd?.toLocaleString()}
-                                            </td>
-                                            <td className="py-4">
-                                            <span className={`px-2 py-1 rounded-full text-xs ${
-                                                    token.is_honeypot
-                                                        ? 'bg-red-500/20 text-red-400'
-                                                        : 'bg-green-500/20 text-green-400'
-                                                }`}>
-                                                    {token.is_honeypot ? 'Honeypot' : 'Safe'}
-                                                </span>
-                                            </td>
-                                        </tr>
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div className="space-y-3">
+                                    {walletData.analytics.copyworthy_reasons.map((reason: string, index: number) => (
+                                        <div key={index} className="flex items-center gap-2 text-gray-300">
+                                            <CheckCircle size={16} className="text-green-400 flex-shrink-0" />
+                                            <span>{reason}</span>
+                                        </div>
                                     ))}
-                                </tbody>
-                            </table>
+                                </div>
+                                <div className="bg-gray-800 rounded-lg p-4">
+                                    <h3 className="text-lg font-semibold text-white mb-3">Key Metrics</h3>
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-400">Avg Position Size</span>
+                                            <span className="text-white">
+                                                ${walletData.analytics.avg_buy_size.toLocaleString()}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-400">Avg Hold Time</span>
+                                            <span className="text-white">
+                                                {formatHoldTime(walletData.analytics.avg_hold_time_hours)}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-400">Win Rate</span>
+                                            <span className="text-white">
+                                                {walletData.winrate.toFixed(1)}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Risk Analysis */}
+                    <div className="grid lg:grid-cols-2 gap-6 mb-8">
+                        <div className="bg-gray-800 rounded-lg p-6">
+                            <div className="flex items-center gap-2 mb-6">
+                                <Shield className="text-blue-400" size={20} />
+                                <h2 className="text-lg font-semibold text-white">
+                                    Risk Analysis
+                                </h2>
+                            </div>
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <h3 className="text-sm text-gray-400 mb-1">Sharpe Ratio</h3>
+                                    <p className="text-2xl font-semibold text-white">
+                                        {walletData?.analytics?.risk_metrics.sharpe_ratio.toFixed(2)}
+                                    </p>
+                                    <p className="text-sm text-gray-400">Risk-adjusted return metric</p>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm text-gray-400 mb-1">Max Drawdown</h3>
+                                    <p className={`text-2xl font-semibold ${
+                                        (walletData?.analytics?.risk_metrics.max_drawdown || 0) <= 20 
+                                            ? 'text-green-400' 
+                                            : (walletData?.analytics?.risk_metrics.max_drawdown || 0) <= 40 
+                                                ? 'text-yellow-400' 
+                                                : 'text-red-400'
+                                    }`}>
+                                        {walletData?.analytics?.risk_metrics.max_drawdown.toFixed(2)}%
+                                    </p>
+                                    <p className="text-sm text-gray-400">Largest peak-to-trough decline</p>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm text-gray-400 mb-1">Volatility</h3>
+                                    <p className="text-2xl font-semibold text-white">
+                                        {walletData?.analytics?.risk_metrics.volatility.toFixed(2)}%
+                                    </p>
+                                    <p className="text-sm text-gray-400">Price movement variation</p>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm text-gray-400 mb-1">Risk Rating</h3>
+                                    <p className={`text-2xl font-semibold ${
+                                        getRiskColor(walletData?.analytics?.risk_metrics.risk_rating)
+                                    }`}>
+                                        {walletData?.analytics?.risk_metrics.risk_rating || 'N/A'}
+                                    </p>
+                                    <p className="text-sm text-gray-400">Overall risk assessment</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Trading Behavior */}
+                        <div className="bg-gray-800 rounded-lg p-6">
+                            <div className="flex items-center gap-2 mb-6">
+                                <Activity className="text-blue-400" size={20} />
+                                <h2 className="text-lg font-semibold text-white">
+                                    Trading Behavior
+                                </h2>
+                            </div>
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <h3 className="text-sm text-gray-400 mb-1">Avg Hold Time</h3>
+                                    <p className="text-2xl font-semibold text-white">
+                                        {formatHoldTime(walletData?.analytics?.avg_hold_time_hours || 0)}
+                                    </p>
+                                    <p className="text-sm text-gray-400">Average position duration</p>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm text-gray-400 mb-1">Avg Swaps/Token</h3>
+                                    <p className="text-2xl font-semibold text-white">
+                                        {walletData?.analytics?.avg_swaps_per_token.toFixed(1)}
+                                    </p>
+                                    <p className="text-sm text-gray-400">Trading frequency per token</p>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm text-gray-400 mb-1">Position Size</h3>
+                                    <p className="text-2xl font-semibold text-white">
+                                        ${walletData?.analytics?.avg_buy_size.toLocaleString()}
+                                    </p>
+                                    <p className="text-sm text-gray-400">Average trade amount</p>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm text-gray-400 mb-1">Success Rate</h3>
+                                    <p className="text-2xl font-semibold text-white">
+                                        {walletData?.winrate.toFixed(1)}%
+                                    </p>
+                                    <p className="text-sm text-gray-400">Profitable trades ratio</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    {/* Risk Analysis Section */}
-                    <div className="mt-8 bg-gray-800 rounded-lg p-6">
-                        <div className="flex items-center gap-2 mb-6">
-                            <Shield className="text-blue-400" size={20} />
-                            <h2 className="text-lg font-semibold text-white">Risk Analysis</h2>
+
+                    {/* Token Performance */}
+                    <div className="bg-gray-800 rounded-lg p-6">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-2">
+                                <BarChart className="text-blue-400" size={20} />
+                                <h2 className="text-lg font-semibold text-white">
+                                    Token Performance
+                                </h2>
+                            </div>
                         </div>
-                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <div className="bg-gray-700/50 rounded-lg p-4">
-                                <div className="text-sm text-gray-400 mb-2">Sharpe Ratio</div>
-                                <div className="text-xl font-bold text-white">
-                                    {walletData.risk_metrics?.sharpe_ratio?.toFixed(2) || 'N/A'}
+                        <div className="space-y-4">
+                            {walletData?.token_metrics.map((token: TokenMetric, index: number) => (
+                                <div 
+                                    key={index}
+                                    className="flex justify-between items-center bg-gray-700/30 rounded-lg p-4"
+                                >
+                                    <div>
+                                        <span className="text-white font-medium">
+                                            {token.symbol}
+                                        </span>
+                                        <div className="text-sm text-gray-400 mt-1">
+                                            {token.num_swaps} trades
+                                        </div>
+                                        <div className="text-sm text-gray-400">
+                                            Hold time: {formatHoldTime(getHoldTime(token.last_trade_time))}
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className={`${token.total_pnl_usd >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                            ${token.total_pnl_usd.toLocaleString()}
+                                        </div>
+                                        <div className={`text-sm ${token.roi_percentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                            {token.roi_percentage.toFixed(1)}% ROI
+                                        </div>
+                                        <div className="flex gap-2 mt-2">
+                                            <a
+                                                href={`https://photon-sol.tinyastro.io/en/lp/${token.token_address}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-xs text-blue-400 hover:text-blue-300 inline-flex items-center gap-1"
+                                            >
+                                                View on Photon <ExternalLink size={12} />
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="text-xs text-gray-400 mt-1">
-                                    Risk-adjusted return metric
-                                </div>
-                            </div>
-
-                            <div className="bg-gray-700/50 rounded-lg p-4">
-                                <div className="text-sm text-gray-400 mb-2">Max Drawdown</div>
-                                <div className="text-xl font-bold text-white">
-                                    {walletData.risk_metrics?.max_drawdown?.toFixed(2)}%
-                                </div>
-                                <div className="text-xs text-gray-400 mt-1">
-                                    Largest peak-to-trough decline
-                                </div>
-                            </div>
-
-                            <div className="bg-gray-700/50 rounded-lg p-4">
-                                <div className="text-sm text-gray-400 mb-2">Win/Loss Ratio</div>
-                                <div className="text-xl font-bold text-white">
-                                    {walletData.risk_metrics?.win_loss_ratio?.toFixed(2) || 'N/A'}
-                                </div>
-                                <div className="text-xs text-gray-400 mt-1">
-                                    Ratio of winning to losing trades
-                                </div>
-                            </div>
-
-                            <div className="bg-gray-700/50 rounded-lg p-4">
-                                <div className="text-sm text-gray-400 mb-2">Risk Rating</div>
-                                <div className={`text-xl font-bold ${
-                                    walletData.risk_metrics?.risk_rating === 'Low' ? 'text-green-400' :
-                                    walletData.risk_metrics?.risk_rating === 'Medium' ? 'text-yellow-400' :
-                                    'text-red-400'
-                                }`}>
-                                    {walletData.risk_metrics?.risk_rating || 'N/A'}
-                                </div>
-                                <div className="text-xs text-gray-400 mt-1">
-                                    Overall risk assessment
-                                </div>
-                            </div>
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -502,4 +490,34 @@ function StatCard({ title, value, icon, trend, subtitle }: StatCardProps) {
             )}
         </div>
     );
+}
+
+// Helper functions
+function formatHoldTime(hours: number): string {
+    if (hours >= 24) {
+        return `${(hours / 24).toFixed(1)}d`;
+    }
+    if (hours >= 1) {
+        return `${hours.toFixed(1)}h`;
+    }
+    return `${(hours * 60).toFixed(0)}m`;
+}
+
+function getHoldTime(lastTradeTime: string): number {
+    const now = new Date();
+    const lastTrade = new Date(lastTradeTime);
+    return (now.getTime() - lastTrade.getTime()) / (1000 * 60 * 60); // Convert to hours
+}
+
+function getRiskColor(rating?: 'Low' | 'Medium' | 'High'): string {
+    switch (rating) {
+        case 'Low':
+            return 'text-green-400';
+        case 'Medium':
+            return 'text-yellow-400';
+        case 'High':
+            return 'text-red-400';
+        default:
+            return 'text-gray-400';
+    }
 }
