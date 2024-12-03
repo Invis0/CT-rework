@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MessageCircle } from 'lucide-react';
 
@@ -7,6 +7,8 @@ interface GuideProps {
   onMinimize: () => void;
   onMaximize: () => void;
 }
+
+const GUIDE_SHOWN_KEY = 'guideShown';
 
 const guideSteps = [
   {
@@ -25,6 +27,20 @@ const guideSteps = [
 
 export const Guide = ({ isMinimized, onMinimize, onMaximize }: GuideProps) => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [shouldShow, setShouldShow] = useState(false);
+
+  useEffect(() => {
+    // Check if guide has been shown before
+    const hasGuideBeenShown = localStorage.getItem(GUIDE_SHOWN_KEY);
+    if (!hasGuideBeenShown) {
+      setShouldShow(true);
+      // Mark guide as shown
+      localStorage.setItem(GUIDE_SHOWN_KEY, 'true');
+    }
+  }, []);
+
+  // If guide shouldn't be shown, return null
+  if (!shouldShow) return null;
 
   if (isMinimized) {
     return (
@@ -39,6 +55,11 @@ export const Guide = ({ isMinimized, onMinimize, onMaximize }: GuideProps) => {
     );
   }
 
+  const handleFinish = () => {
+    onMinimize();
+    setShouldShow(false);
+  };
+
   return (
     <AnimatePresence>
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -51,7 +72,7 @@ export const Guide = ({ isMinimized, onMinimize, onMaximize }: GuideProps) => {
           <div className="flex justify-between items-center mb-4 sm:mb-6">
             <h3 className="text-lg sm:text-xl font-semibold text-white">Platform Guide</h3>
             <button
-              onClick={onMinimize}
+              onClick={handleFinish}
               className="text-gray-400 hover:text-white transition-colors p-1"
             >
               <X size={20} />
@@ -89,7 +110,7 @@ export const Guide = ({ isMinimized, onMinimize, onMaximize }: GuideProps) => {
                 </button>
                 {currentStep === guideSteps.length - 1 ? (
                   <button
-                    onClick={onMinimize}
+                    onClick={handleFinish}
                     className="px-3 sm:px-4 py-1.5 sm:py-2 rounded text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
                   >
                     Get Started
