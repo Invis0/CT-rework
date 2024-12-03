@@ -8,7 +8,7 @@ import {
     Shield, CheckCircle
 } from 'lucide-react';
 import Link from 'next/link';
-import { TokenMetric, WalletData, Analytics } from '@/types';
+import { TokenMetric, WalletData, Analytics } from '../types';
 
 interface CieloToken {
     num_swaps: number;

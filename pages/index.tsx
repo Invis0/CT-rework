@@ -15,7 +15,7 @@ import { Alert, AlertTitle, AlertDescription } from '../components/ui/alert';
 import { Analytics } from "@vercel/analytics/react";
 import { Guide } from '../components/Guide';
 import { SocialButtons } from '../components/SocialButtons';
-import { TokenMetric, WalletData } from '@/types';
+import { TokenMetric, WalletData } from '../types';
 // API base URL
 const API_URL = 'http://localhost:8000';
 

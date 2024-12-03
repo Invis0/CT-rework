@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import Sidebar from '../components/Sidebar';
 import WalletCard from '../components/WalletCard';
 import FilterPanel from '../components/FilterPanel';
-import { TokenMetric, WalletData, Analytics } from '@/types';
+import { TokenMetric, WalletData, Analytics } from '../types';
 
 interface FilterCriteria {
     minRoi: number;

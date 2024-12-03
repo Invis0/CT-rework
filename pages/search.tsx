@@ -4,7 +4,7 @@ import { Search as SearchIcon, AlertCircle } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import WalletCard from '../components/WalletCard';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { TokenMetric, WalletData, Analytics } from '@/types';
+import { TokenMetric, WalletData, Analytics } from '../types';
 
 interface CieloToken {
     num_swaps: number;

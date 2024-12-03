@@ -17,7 +17,7 @@ import {
     PieChart as RechartsPieChart, Pie, Cell 
 } from 'recharts';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { TokenMetric, WalletData, Analytics } from '@/types';
+import { TokenMetric, WalletData, Analytics } from '../../types';
 import type { ReactNode } from 'react';
 
 // Cielo API headers
