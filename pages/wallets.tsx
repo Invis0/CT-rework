@@ -1,4 +1,4 @@
-import React, { useState, useEffect, type ChangeEvent } from 'react';
+import React, { useState, useEffect, type ChangeEvent, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import Sidebar from '../components/Sidebar';
 import WalletCard from '../components/WalletCard';

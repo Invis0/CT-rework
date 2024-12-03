@@ -1,5 +1,5 @@
 // pages/index.tsx
-import React, { useState, useEffect, type ChangeEvent } from 'react';
+import React, { useState, useEffect, type ChangeEvent, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { 
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, 
@@ -89,7 +89,7 @@ interface DashboardStats {
 interface StatCardProps {
     title: string;
     value: string;
-    icon: React.ReactNode;
+    icon: ReactNode;
     change: number;
 }
 
@@ -306,7 +306,7 @@ export default function Dashboard() {
 interface StatsCardProps {
     title: string;
     value: string;
-    icon: React.ReactNode;
+    icon: ReactNode;
     change: number;
 }
 

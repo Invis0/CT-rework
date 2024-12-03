@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { 
     TrendingUp, TrendingDown, Activity, DollarSign, 

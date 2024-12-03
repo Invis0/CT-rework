@@ -1,4 +1,4 @@
-import React, { useState, type ChangeEvent } from 'react';
+import React, { useState, useEffect, type ChangeEvent, type ReactNode } from 'react';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
 import { 
@@ -32,7 +32,7 @@ interface WalletDetailsData extends WalletData {
 interface StatCardProps {
     title: string;
     value: string;
-    icon?: any;
+    icon?: ReactNode;
     trend?: boolean;
     subtitle?: string;
 }
