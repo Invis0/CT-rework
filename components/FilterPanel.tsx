@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Filter, X, ChevronDown, ChevronUp, 
-    TrendingUp, Clock, Activity, DollarSign, 
+    TrendingUp, Clock, Activity, 
     Shield, Coins 
 } from 'lucide-react';
 

@@ -3,9 +3,9 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
     ArrowUpRight, ArrowDownRight, Activity,
-    DollarSign, TrendingUp, AlertTriangle,
-    Calendar, Clock, ChevronLeft,
-    BarChart2, Shield, History,
+    DollarSign, TrendingUp,
+    ChevronLeft,
+    BarChart2, Shield,
     Wallet, RefreshCw, ExternalLink,
     PieChart, LineChart as LineChartIcon
 } from 'lucide-react';

@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
     TrendingUp, TrendingDown, Activity, DollarSign, 
-    BarChart2, AlertTriangle, Eye, RefreshCw,
-    ExternalLink, ChevronDown, ChevronUp, Wallet,
-    Award, Target, Sparkles, BarChart, Clock,
+    BarChart2, Eye, RefreshCw,
+    ExternalLink, ChevronDown, Wallet,
+    Award, Target, BarChart, Clock,
     Shield
 } from 'lucide-react';
 import Link from 'next/link';
@@ -407,18 +407,18 @@ export default function WalletCard({ wallet, onRefresh }: WalletProps) {
                                         >
                                             <div>
                                                 <span className="text-white font-medium">
-                                                    {token.token_symbol || token.symbol}
+                                                    {'token_symbol' in token ? token.token_symbol : token.symbol}
                                                 </span>
                                                 <div className="text-xs text-gray-400 mt-1">
-                                                    {token.num_swaps || token.trades || 0} trades
+                                                    {token.num_swaps} trades
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <div className={`${(token.total_pnl_usd || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                                    ${(token.total_pnl_usd || 0).toLocaleString()}
+                                                <div className={`${token.total_pnl_usd >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                    ${token.total_pnl_usd.toLocaleString()}
                                                 </div>
-                                                <div className={`text-xs ${(token.roi_percentage || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                                    {(token.roi_percentage || 0).toFixed(1)}% ROI
+                                                <div className={`text-xs ${token.roi_percentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                    {token.roi_percentage.toFixed(1)}% ROI
                                                 </div>
                                             </div>
                                         </div>
