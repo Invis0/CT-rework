@@ -20,23 +20,68 @@ const API_URL = 'http://localhost:8000';
 
 interface WalletData {
     address: string;
+    total_pnl_usd: number;
+    winrate: number;
+    total_trades: number;
+    roi_percentage: number;
+    avg_trade_size: number;
+    total_volume: number;
+    last_updated: string;
+    consistency_score: number;
+    token_metrics: Array<{
+        symbol: string;
+        token_address: string;
+        num_swaps: number;
+        total_buy_usd: number;
+        total_sell_usd: number;
+        total_pnl_usd: number;
+        roi_percentage: number;
+        avg_position_size: number;
+        last_trade_time: string;
+    }>;
+    risk_metrics: {
+        max_drawdown: number;
+        sharpe_ratio: number;
+        sortino_ratio: number;
+        risk_rating: 'Low' | 'Medium' | 'High';
+        volatility: number;
+    };
     total_score: number;
     roi_score: number;
-    consistency_score: number;
     volume_score: number;
     risk_score: number;
-    trade_count: number;
-    win_rate: number;
-    avg_profit: number;
     max_drawdown: number;
-    sharpe_ratio: number;
-    token_stats: any[];
-    risk_metrics: any;
+    last_trade_time: string;
+    total_volume_24h?: number;
+    total_pnl_24h?: number;
+    additional_metrics?: Array<{
+        num_swaps: number;
+        total_buy_usd: number;
+        total_sell_usd: number;
+        total_pnl_usd: number;
+        roi_percentage: number;
+        token_symbol: string;
+        token_name: string;
+        is_honeypot: boolean;
+    }>;
+}
+
+interface DashboardStats {
+    total_wallets: number;
+    average_roi: number;
+    top_performers: number;
+    average_winrate: number;
+    trends?: Array<{
+        wallet_count_change: number;
+        roi_change: number;
+        top_performers_change: number;
+        winrate_change: number;
+    }>;
 }
 
 export default function Dashboard() {
     const [topWallets, setTopWallets] = useState<WalletData[]>([]);
-    const [stats, setStats] = useState<any>(null);
+    const [stats, setStats] = useState<DashboardStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [error, setError] = useState<string | null>(null);
@@ -65,7 +110,7 @@ export default function Dashboard() {
                 throw new Error('Failed to fetch data');
             }
 
-            const [walletsData, statsData] = await Promise.all([
+            const [walletsData, statsData]: [WalletData[], DashboardStats] = await Promise.all([
                 walletsResponse.json(),
                 statsResponse.json()
             ]);
