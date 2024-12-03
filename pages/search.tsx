@@ -28,6 +28,8 @@ interface CieloResponse {
         winrate: number;
         total_tokens_traded: number;
         total_roi_percentage: number;
+        total_volume: number;
+        total_pnl_usd: number;
     };
 }
 
@@ -87,11 +89,9 @@ export default function SearchWallet() {
             setLoading(true);
             setError(null);
             
-            // First try to get data from our database
             const dbResponse = await fetch(`https://api-production-0673.up.railway.app/wallets/${address}`);
             
             if (!dbResponse.ok) {
-                // If wallet not in database, try Cielo directly
                 const cieloResponse = await fetch(`https://api-production-0673.up.railway.app/proxy/cielo/${address}`);
                 
                 if (!cieloResponse.ok) {
@@ -104,7 +104,6 @@ export default function SearchWallet() {
                     throw new Error('Failed to fetch wallet data from Cielo');
                 }
 
-                // Transform Cielo data to match our format
                 const transformedData: WalletResponse = {
                     address: address,
                     total_pnl_usd: cieloData.data.total_pnl_usd || 0,
@@ -115,7 +114,7 @@ export default function SearchWallet() {
                     total_volume: cieloData.data.total_volume || 0,
                     last_updated: new Date().toISOString(),
                     consistency_score: 0,
-                    token_metrics: cieloData.data.tokens?.map(token => ({
+                    token_metrics: cieloData.data.tokens?.map((token: CieloToken) => ({
                         symbol: token.token_symbol,
                         token_address: '',
                         num_swaps: token.num_swaps,
@@ -149,10 +148,7 @@ export default function SearchWallet() {
                 return;
             }
 
-            // If we have data in our database
             const dbData = await dbResponse.json();
-            
-            // Get additional data from Cielo
             const cieloResponse = await fetch(`https://api-production-0673.up.railway.app/proxy/cielo/${address}`);
             let cieloResult = null;
 
@@ -164,7 +160,6 @@ export default function SearchWallet() {
                 }
             }
 
-            // Combine data from both sources
             setWalletData({
                 ...dbData,
                 ...(cieloResult && {
