@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search as SearchIcon, AlertCircle } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
@@ -198,14 +198,17 @@ export default function SearchWallet() {
                                         const response = await fetch(`https://api-production-0673.up.railway.app/proxy/cielo/${address}`);
                                         if (!response.ok) throw new Error('Failed to refresh data');
                                         const result = await response.json();
-                                        if (result.success) {
+                                        if (result.success && walletData) {
                                             setCieloData(result.data);
-                                            setWalletData(prev => ({
-                                                ...prev,
-                                                total_volume_24h: result.data.total_volume_24h,
-                                                total_pnl_24h: result.data.total_pnl_24h,
-                                                additional_metrics: result.data.tokens
-                                            }));
+                                            setWalletData(prev => {
+                                                if (!prev) return prev;
+                                                return {
+                                                    ...prev,
+                                                    total_volume_24h: result.data.total_volume_24h,
+                                                    total_pnl_24h: result.data.total_pnl_24h,
+                                                    additional_metrics: result.data.tokens
+                                                } as WalletResponse;
+                                            });
                                         }
                                     } catch (error) {
                                         console.error('Error refreshing wallet:', error);
