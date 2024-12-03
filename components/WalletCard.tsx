@@ -197,12 +197,12 @@ export default function WalletCard({ wallet, onRefresh, className }: WalletProps
         }
         return wallet.token_metrics;
     };
-    const getRiskColor = (rating: string | undefined) => {
+    const getRiskColor = (rating?: 'Low' | 'Medium' | 'High' | undefined): string => {
         switch(rating) {
             case 'Low':
-                return 'text-green-500';
+                return 'text-green-400';
             case 'Medium':
-                return 'text-yellow-500';
+                return 'text-yellow-400';
             case 'High':
                 return 'text-red-400';
             default:
@@ -546,7 +546,7 @@ function formatHoldTime(hours: number): string {
 }
 
 // Helper function to get risk color
-function getRiskColor(rating?: 'Low' | 'Medium' | 'High'): string {
+function getRiskColor(rating?: 'Low' | 'Medium' | 'High' | undefined): string {
     switch (rating) {
         case 'Low':
             return 'text-green-400';

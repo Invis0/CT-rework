@@ -374,7 +374,7 @@ function StatCard({ title, value, trend, icon, subtitle }: StatCardProps) {
     );
 }
 
-function getRiskColor(riskRating: 'Low' | 'Medium' | 'High') {
+function getRiskColor(riskRating?: 'Low' | 'Medium' | 'High' | undefined): string {
     switch (riskRating) {
         case 'Low':
             return 'text-green-400';

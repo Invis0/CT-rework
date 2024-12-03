@@ -523,7 +523,7 @@ function getHoldTime(lastTradeTime: string): number {
     return (now.getTime() - lastTrade.getTime()) / (1000 * 60 * 60); // Convert to hours
 }
 
-function getRiskColor(rating?: 'Low' | 'Medium' | 'High'): string {
+function getRiskColor(rating?: 'Low' | 'Medium' | 'High' | undefined): string {
     switch (rating) {
         case 'Low':
             return 'text-green-400';
