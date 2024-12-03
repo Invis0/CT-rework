@@ -4,9 +4,10 @@ import {
     TrendingUp, TrendingDown, Activity, DollarSign, 
     BarChart2, AlertTriangle, Eye, RefreshCw,
     ExternalLink, ChevronDown, ChevronUp, Wallet,
-    Award, Target, Sparkles, BarChart, Clock
+    Award, Target, Sparkles, BarChart, Clock, Copy
 } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'react-hot-toast';
 
 interface TokenStat {
     symbol: string;
@@ -83,6 +84,15 @@ export default function WalletCard({ wallet, onRefresh }: WalletProps) {
         return `${Math.floor(diffInSeconds / 86400)}d ago`;
     };
 
+    const copyToClipboard = async () => {
+        try {
+            await navigator.clipboard.writeText(wallet.address);
+            toast.success('Wallet address copied!');
+        } catch (err) {
+            toast.error('Failed to copy address');
+        }
+    };
+
     return (
         <motion.div
             layout
@@ -125,6 +135,13 @@ export default function WalletCard({ wallet, onRefresh }: WalletProps) {
                     {/* Action Buttons */}
                     <div className="flex gap-2">
                         <button
+                            onClick={copyToClipboard}
+                            className="p-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition-all hover:scale-105"
+                            title="Copy address"
+                        >
+                            <Copy className="text-blue-400" size={20} />
+                        </button>
+                        <button
                             onClick={handleRefresh}
                             disabled={refreshing}
                             className="p-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition-all hover:scale-105"
@@ -143,6 +160,37 @@ export default function WalletCard({ wallet, onRefresh }: WalletProps) {
                                 <Eye className="text-blue-400" size={20} />
                             </button>
                         </Link>
+                        <a
+                            href={`https://gmgn.ai/sol/address/${wallet.address}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition-all hover:scale-105"
+                            title="View on GMGN"
+                        >
+                            <ExternalLink className="text-blue-400" size={20} />
+                        </a>
+                    </div>
+                </div>
+
+                {/* Additional Stats Section */}
+                <div className="grid grid-cols-3 gap-4 mb-6 bg-gray-700/20 p-4 rounded-lg">
+                    <div className="space-y-1">
+                        <div className="text-xs text-gray-400">Total Trades</div>
+                        <div className="text-lg font-semibold text-white">
+                            {wallet.trade_count.toLocaleString()}
+                        </div>
+                    </div>
+                    <div className="space-y-1">
+                        <div className="text-xs text-gray-400">Avg. Profit</div>
+                        <div className="text-lg font-semibold text-white">
+                            ${wallet.avg_profit.toLocaleString()}
+                        </div>
+                    </div>
+                    <div className="space-y-1">
+                        <div className="text-xs text-gray-400">Sharpe Ratio</div>
+                        <div className="text-lg font-semibold text-white">
+                            {wallet.sharpe_ratio.toFixed(2)}
+                        </div>
                     </div>
                 </div>
 
