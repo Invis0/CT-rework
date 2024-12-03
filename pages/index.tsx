@@ -13,6 +13,8 @@ import Sidebar from '../components/Sidebar';
 import WalletCard from '../components/WalletCard';
 import { Alert, AlertTitle, AlertDescription } from '../components/ui/alert';
 import { Analytics } from "@vercel/analytics/react";
+import { Guide } from '../components/Guide';
+import { SocialButtons } from '../components/SocialButtons';
 // API base URL
 const API_URL = 'http://localhost:8000';
 
@@ -43,6 +45,7 @@ export default function Dashboard() {
         minWinRate: 50,
         minTrades: 20
     });
+    const [isGuideMinimized, setIsGuideMinimized] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -223,6 +226,14 @@ export default function Dashboard() {
                     </motion.div>
                 </div>
             </main>
+
+            <Guide 
+                isMinimized={isGuideMinimized}
+                onMinimize={() => setIsGuideMinimized(true)}
+                onMaximize={() => setIsGuideMinimized(false)}
+            />
+            <SocialButtons />
+            <Analytics />
         </div>
     );
 }
