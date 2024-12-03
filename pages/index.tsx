@@ -127,27 +127,61 @@ export default function Dashboard() {
             const walletsData = await walletsResponse.json();
             const statsData = await statsResponse.json();
 
-            // Check if walletsData has the expected structure
-            if (Array.isArray(walletsData)) {
-                setTopWallets(walletsData);
-            } else if (walletsData.data && Array.isArray(walletsData.data)) {
-                setTopWallets(walletsData.data);
-            } else {
-                setTopWallets([]);
-            }
+            // Transform wallet data to match WalletData interface
+            const transformedWallets = walletsData.map((wallet: any) => ({
+                address: wallet.address,
+                total_pnl_usd: wallet.total_pnl_usd || 0,
+                winrate: wallet.winrate || 0,
+                total_trades: wallet.total_trades || 0,
+                roi_percentage: wallet.roi_percentage || 0,
+                avg_trade_size: wallet.avg_trade_size || 0,
+                total_volume: wallet.total_volume || 0,
+                last_updated: wallet.last_updated || new Date().toISOString(),
+                consistency_score: wallet.consistency_score || 0,
+                token_metrics: wallet.token_metrics || [],
+                risk_metrics: wallet.risk_metrics || {
+                    max_drawdown: 0,
+                    sharpe_ratio: 0,
+                    sortino_ratio: 0,
+                    risk_rating: 'Medium',
+                    volatility: 0
+                },
+                total_score: wallet.total_score || 0,
+                roi_score: wallet.roi_score || 0,
+                volume_score: wallet.volume_score || 0,
+                risk_score: wallet.risk_score || 0,
+                max_drawdown: wallet.max_drawdown || 0,
+                last_trade_time: wallet.last_trade_time || new Date().toISOString(),
+                total_volume_24h: wallet.total_volume_24h || 0,
+                total_pnl_24h: wallet.total_pnl_24h || 0,
+                analytics: wallet.analytics || {
+                    avg_hold_time_hours: 0,
+                    avg_swaps_per_token: 0,
+                    avg_buy_size: 0,
+                    risk_metrics: {
+                        max_drawdown: 0,
+                        sharpe_ratio: 0,
+                        volatility: 0,
+                        risk_rating: 'Medium'
+                    },
+                    is_copyworthy: false,
+                    copyworthy_reasons: []
+                }
+            }));
 
-            // Check if statsData has the expected structure
-            if (statsData && typeof statsData === 'object') {
+            setTopWallets(transformedWallets);
+
+            if (statsData) {
                 setStats({
                     total_wallets: statsData.total_wallets || 0,
                     total_volume: statsData.total_volume || 0,
                     total_trades: statsData.total_trades || 0,
-                    avg_roi: statsData.avg_roi || 0,
+                    avg_roi: statsData.average_roi || 0,
                     change: {
-                        wallets: statsData.change?.wallets || 0,
-                        volume: statsData.change?.volume || 0,
-                        trades: statsData.change?.trades || 0,
-                        roi: statsData.change?.roi || 0
+                        wallets: statsData.trends?.[0]?.wallet_count_change || 0,
+                        volume: statsData.trends?.[0]?.volume_change || 0,
+                        trades: statsData.trends?.[0]?.trades_change || 0,
+                        roi: statsData.trends?.[0]?.roi_change || 0
                     }
                 });
             }
