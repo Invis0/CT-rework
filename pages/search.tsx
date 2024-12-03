@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, type ChangeEvent } from 'react';
 import { motion } from 'framer-motion';
 import { 
     Search as SearchIcon, AlertCircle, DollarSign,

@@ -1,5 +1,5 @@
+import React, { useState, type ChangeEvent } from 'react';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
     ArrowUpRight, ArrowDownRight, Activity,
