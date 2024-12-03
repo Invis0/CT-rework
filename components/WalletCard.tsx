@@ -1,3 +1,13 @@
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { 
+    TrendingUp, TrendingDown, Activity, DollarSign, 
+    BarChart2, Eye, RefreshCw,
+    ExternalLink, ChevronDown, Wallet,
+    Award, Target, BarChart, Clock,
+    Shield, CheckCircle
+} from 'lucide-react';
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 interface TokenMetric {
@@ -24,9 +34,6 @@ interface WalletAnalytics {
     };
     is_copyworthy: boolean;
     copyworthy_reasons: string[];
-    roi_score: number;
-    consistency_score: number;
-    volume_score: number;
 }
 
 interface WalletData {
@@ -40,7 +47,14 @@ interface WalletData {
     last_updated: string;
     consistency_score: number;
     token_metrics: TokenMetric[];
-    analytics?: WalletAnalytics;
+    risk_metrics: {
+        max_drawdown: number;
+        sharpe_ratio: number;
+        sortino_ratio: number;
+        risk_rating: 'Low' | 'Medium' | 'High';
+        volatility: number;
+    };
+    total_score: number;
     roi_score: number;
     volume_score: number;
     risk_score: number;
@@ -48,6 +62,7 @@ interface WalletData {
     last_trade_time: string;
     total_volume_24h?: number;
     total_pnl_24h?: number;
+    analytics?: WalletAnalytics;
 }
 
 export interface WalletProps {
@@ -56,6 +71,21 @@ export interface WalletProps {
     className?: string;
 }
 
-export default function WalletCard({ wallet, onRefresh, className }: WalletProps) {
+export default function WalletCard({ wallet, onRefresh, className }: WalletProps): JSX.Element {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
+
     // ... rest of your component code
+
+    return (
+        <motion.div
+            layout
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            whileHover={{ scale: 1.01 }}
+            className={`bg-gray-800 rounded-lg border border-gray-700 hover:border-gray-600 transition-all shadow-lg overflow-hidden hover:shadow-xl ${className}`}
+        >
+            {/* Your existing JSX */}
+        </motion.div>
+    );
 }
