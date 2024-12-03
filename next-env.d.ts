@@ -1,13 +1,5 @@
 /// <reference types="next" />
 /// <reference types="next/image-types/global" />
-/// <reference path="./types/global.d.ts" />
-
-declare namespace JSX {
-    interface Element {}
-    interface IntrinsicElements {
-        [elemName: string]: any;
-    }
-}
 
 declare module 'react' {
     export * from 'react/index';
@@ -18,15 +10,18 @@ declare module 'react' {
     export const createContext: any;
     export const useRef: any;
     export const useMemo: any;
-    export type ReactNode = 
-        | string
-        | number
-        | boolean
-        | null
-        | undefined
-        | React.ReactElement
-        | React.ReactFragment
-        | React.ReactPortal;
+    export type ReactNode = any;
+    export interface ChangeEvent<T = Element> {
+        target: T;
+        currentTarget: T;
+    }
+}
+
+declare namespace JSX {
+    interface Element {}
+    interface IntrinsicElements {
+        [elemName: string]: any;
+    }
 }
 
 declare module 'react/jsx-runtime';

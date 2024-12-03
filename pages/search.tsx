@@ -4,32 +4,20 @@ import {
     Search as SearchIcon, AlertCircle, DollarSign,
     Activity, TrendingUp, BarChart2
 } from 'lucide-react';
-import type { ReactNode, ChangeEvent } from 'react';
 import Sidebar from '../components/Sidebar';
 import WalletCard from '../components/WalletCard';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import type { WalletData } from '../types/global';
-
-interface CieloToken {
-    num_swaps: number;
-    total_buy_usd: number;
-    total_sell_usd: number;
-    total_pnl_usd: number;
-    roi_percentage: number;
-    token_symbol: string;
-    token_name: string;
-    is_honeypot: boolean;
-}
+import type { WalletData, WalletAnalytics, TokenMetric } from '../components/WalletCard';
 
 interface CieloResponse {
     total_volume_24h?: number;
     total_pnl_24h?: number;
-    tokens: CieloToken[];
+    tokens: TokenMetric[];
     success: boolean;
     data: {
         total_volume_24h: number;
         total_pnl_24h: number;
-        tokens: CieloToken[];
+        tokens: TokenMetric[];
         winrate: number;
         total_tokens_traded: number;
         total_roi_percentage: number;
@@ -37,23 +25,6 @@ interface CieloResponse {
         total_pnl_usd: number;
         analytics?: WalletAnalytics;
     };
-}
-
-interface WalletAnalytics {
-    avg_hold_time_hours: number;
-    avg_swaps_per_token: number;
-    avg_buy_size: number;
-    risk_metrics: {
-        max_drawdown: number;
-        sharpe_ratio: number;
-        volatility: number;
-        risk_rating: 'Low' | 'Medium' | 'High';
-    };
-    is_copyworthy: boolean;
-    copyworthy_reasons: string[];
-    roi_score: number;
-    consistency_score: number;
-    volume_score: number;
 }
 
 export default function SearchWallet() {
@@ -114,6 +85,14 @@ export default function SearchWallet() {
                         avg_position_size: token.average_buy_price * token.total_buy_amount,
                         last_trade_time: new Date(token.last_trade * 1000).toISOString()
                     })) || [],
+                    risk_metrics: {
+                        max_drawdown: cieloData.data.analytics?.risk_metrics?.max_drawdown || 0,
+                        sharpe_ratio: cieloData.data.analytics?.risk_metrics?.sharpe_ratio || 0,
+                        sortino_ratio: 0,
+                        risk_rating: cieloData.data.analytics?.risk_metrics?.risk_rating || 'Medium',
+                        volatility: cieloData.data.analytics?.risk_metrics?.volatility || 0
+                    },
+                    total_score: 0,
                     analytics: cieloData.data.analytics
                 };
 
