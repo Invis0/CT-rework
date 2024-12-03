@@ -41,30 +41,30 @@ export const Guide = ({ isMinimized, onMinimize, onMaximize }: GuideProps) => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}
-          className="w-[90%] max-w-md bg-gray-800 rounded-lg shadow-xl p-6"
+          className="w-full max-w-md bg-gray-800 rounded-lg shadow-xl p-4 sm:p-6"
         >
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xl font-semibold text-white">Platform Guide</h3>
+          <div className="flex justify-between items-center mb-4 sm:mb-6">
+            <h3 className="text-lg sm:text-xl font-semibold text-white">Platform Guide</h3>
             <button
               onClick={onMinimize}
-              className="text-gray-400 hover:text-white transition-colors"
+              className="text-gray-400 hover:text-white transition-colors p-1"
             >
               <X size={20} />
             </button>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             <div className="text-white">
-              <h4 className="text-lg font-medium mb-3">{guideSteps[currentStep].title}</h4>
-              <p className="text-gray-300">{guideSteps[currentStep].content}</p>
+              <h4 className="text-base sm:text-lg font-medium mb-2 sm:mb-3">{guideSteps[currentStep].title}</h4>
+              <p className="text-gray-300 text-sm sm:text-base">{guideSteps[currentStep].content}</p>
             </div>
 
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
               <div className="flex space-x-2">
                 {guideSteps.map((_, index) => (
                   <div
@@ -78,7 +78,7 @@ export const Guide = ({ isMinimized, onMinimize, onMaximize }: GuideProps) => {
               <div className="flex space-x-3">
                 <button
                   onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
-                  className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded text-sm font-medium transition-colors ${
                     currentStep === 0
                       ? 'text-gray-500 cursor-not-allowed'
                       : 'text-white hover:bg-gray-700'
@@ -90,14 +90,14 @@ export const Guide = ({ isMinimized, onMinimize, onMaximize }: GuideProps) => {
                 {currentStep === guideSteps.length - 1 ? (
                   <button
                     onClick={onMinimize}
-                    className="px-4 py-2 rounded text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                    className="px-3 sm:px-4 py-1.5 sm:py-2 rounded text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
                   >
                     Get Started
                   </button>
                 ) : (
                   <button
                     onClick={() => setCurrentStep(Math.min(guideSteps.length - 1, currentStep + 1))}
-                    className="px-4 py-2 rounded text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                    className="px-3 sm:px-4 py-1.5 sm:py-2 rounded text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
                   >
                     Next
                   </button>
