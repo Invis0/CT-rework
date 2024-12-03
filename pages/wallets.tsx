@@ -1,171 +1,180 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, RefreshCw, Filter } from 'lucide-react';
-import Sidebar from '../components/Sidebar';
 import WalletCard from '../components/WalletCard';
+import Sidebar from '../components/Sidebar';
 import FilterPanel from '../components/FilterPanel';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-interface FilterCriteria {
-    minRoi: number;
-    minWinRate: number;
-    minTrades: number;
-    minVolume: number;
-    minProfit: number;
-    riskLevel: string | null;
-    tokenType: string | null;
-    timeFrame: string;
+
+// Use the same WalletData interface as in other files
+interface TokenMetric {
+    symbol: string;
+    token_address: string;
+    num_swaps: number;
+    total_buy_usd: number;
+    total_sell_usd: number;
+    total_pnl_usd: number;
+    roi_percentage: number;
+    avg_position_size: number;
+    last_trade_time: string;
+}
+
+interface RiskMetric {
+    max_drawdown: number;
+    sharpe_ratio: number;
+    sortino_ratio: number;
+    risk_rating: 'Low' | 'Medium' | 'High';
+    volatility: number;
 }
 
 interface WalletData {
     address: string;
+    total_pnl_usd: number;
+    winrate: number;
+    total_trades: number;
+    roi_percentage: number;
+    avg_trade_size: number;
+    total_volume: number;
+    last_updated: string;
+    consistency_score: number;
+    token_metrics: TokenMetric[];
+    risk_metrics: RiskMetric;
     total_score: number;
     roi_score: number;
-    consistency_score: number;
     volume_score: number;
     risk_score: number;
-    trade_count: number;
-    win_rate: number;
-    avg_profit: number;
     max_drawdown: number;
-    sharpe_ratio: number;
-    token_stats: any[];
-    risk_metrics: any;
+    last_trade_time: string;
+    total_volume_24h?: number;
+    total_pnl_24h?: number;
+    additional_metrics?: Array<{
+        num_swaps: number;
+        total_buy_usd: number;
+        total_sell_usd: number;
+        total_pnl_usd: number;
+        roi_percentage: number;
+        token_symbol: string;
+        token_name: string;
+        is_honeypot: boolean;
+    }>;
 }
 
-export default function Wallets() {
+// Update the FilterPanel props to match the component
+interface FilterPanelProps {
+    criteria: FilterCriteria;
+    onChange: (criteria: FilterCriteria) => void;
+}
+
+export default function WalletsPage() {
     const [wallets, setWallets] = useState<WalletData[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [refreshing, setRefreshing] = useState(false);
-    const [showFilters, setShowFilters] = useState(false);
-    const [filterCriteria, setFilterCriteria] = useState<FilterCriteria>({
+    const [filters, setFilters] = useState({
         minRoi: 20,
         minWinRate: 50,
-        minTrades: 20,
-        minVolume: 0,
-        minProfit: 0,
-        riskLevel: null,
-        tokenType: null,
-        timeFrame: '7d'
-      });
+        minTrades: 20
+    });
 
-    const fetchWallets = async (showRefreshAnimation = true) => {
+    const fetchWallets = async (isRefresh = false) => {
         try {
-            if (showRefreshAnimation) {
-                setRefreshing(true);
-            }
-            setError(null);
-
-            const response = await fetch(`https://api-production-0673.up.railway.app/wallets/top?min_roi=${filterCriteria.minRoi}&min_win_rate=${filterCriteria.minWinRate}&min_trades=${filterCriteria.minTrades}`);
+            setLoading(true);
+            const response = await fetch(
+                `https://api-production-0673.up.railway.app/wallets/top?min_roi=${filters.minRoi}&min_win_rate=${filters.minWinRate}&min_trades=${filters.minTrades}`
+            );
             
             if (!response.ok) {
                 throw new Error('Failed to fetch wallets');
             }
 
             const data = await response.json();
-            setWallets(data);
-        } catch (err: any) {
-            setError(err.message);
+            // Transform the data to match WalletData interface if necessary
+            const transformedData: WalletData[] = data.map((wallet: any) => ({
+                address: wallet.wallet_address || wallet.address,
+                total_pnl_usd: wallet.total_pnl_usd,
+                winrate: wallet.winrate,
+                total_trades: wallet.total_trades,
+                roi_percentage: wallet.roi_percentage,
+                avg_trade_size: wallet.avg_trade_size,
+                total_volume: wallet.total_volume,
+                last_updated: wallet.last_updated,
+                consistency_score: wallet.consistency_score,
+                token_metrics: wallet.token_metrics || [],
+                risk_metrics: wallet.risk_metrics || {
+                    max_drawdown: 0,
+                    sharpe_ratio: 0,
+                    sortino_ratio: 0,
+                    risk_rating: 'Medium',
+                    volatility: 0
+                },
+                total_score: wallet.total_score || 0,
+                roi_score: wallet.roi_score || 0,
+                volume_score: wallet.volume_score || 0,
+                risk_score: wallet.risk_score || 0,
+                max_drawdown: wallet.max_drawdown || 0,
+                last_trade_time: wallet.last_trade_time || wallet.last_updated,
+                total_volume_24h: wallet.total_volume_24h,
+                total_pnl_24h: wallet.total_pnl_24h,
+                additional_metrics: wallet.additional_metrics
+            }));
+
+            setWallets(transformedData);
+        } catch (error) {
+            console.error('Error fetching wallets:', error);
+            setError('Failed to fetch wallets. Please try again.');
         } finally {
             setLoading(false);
-            setRefreshing(false);
         }
     };
 
     useEffect(() => {
-        fetchWallets(false);
-    }, [filterCriteria]);
-
-    const filteredWallets = wallets.filter(wallet =>
-        wallet.address.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    const handleRefresh = () => {
-        fetchWallets(true);
-    };
+        fetchWallets();
+    }, [filters]);
 
     return (
         <div className="flex h-screen bg-gray-900">
             <Sidebar />
             
-            <main className="flex-1 overflow-y-auto p-6">
-                <div className="max-w-7xl mx-auto">
-                    {/* Header */}
-                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8">
+            <main className="flex-1 overflow-y-auto">
+                <div className="p-6 space-y-6">
+                    <div className="flex justify-between items-center">
                         <h1 className="text-3xl font-bold text-white">Top Wallets</h1>
-                        
-                        <div className="flex flex-col gap-4 md:flex-row md:items-center">
-                            {/* Search */}
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    placeholder="Search wallets..."
-                                    className="w-full md:w-64 px-4 py-2 bg-gray-800 rounded-lg text-white border border-gray-700 focus:outline-none focus:border-blue-500"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                                <Search className="absolute right-3 top-2.5 text-gray-400" size={20} />
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => setShowFilters(!showFilters)}
-                                    className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 flex items-center gap-2"
-                                >
-                                    <Filter size={20} />
-                                    Filters
-                                </button>
-                                <button
-                                    onClick={handleRefresh}
-                                    disabled={refreshing}
-                                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 flex items-center gap-2"
-                                >
-                                    <RefreshCw 
-                                        size={20} 
-                                        className={refreshing ? 'animate-spin' : ''} 
-                                    />
-                                    Refresh
-                                </button>
-                            </div>
-                        </div>
                     </div>
 
-                    {/* Filter Panel */}
-                    {showFilters && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="mb-6"
-                        >
-                            <FilterPanel
-                                criteria={filterCriteria}
-                                onChange={setFilterCriteria}
-                            />
-                        </motion.div>
-                    )}
+                    <FilterPanel 
+                        criteria={{
+                            minRoi: filters.minRoi,
+                            minWinRate: filters.minWinRate,
+                            minTrades: filters.minTrades,
+                            minVolume: 0,
+                            minProfit: 0,
+                            riskLevel: null,
+                            tokenType: null,
+                            timeFrame: '7d'
+                        }}
+                        onChange={(newCriteria) => setFilters({
+                            minRoi: newCriteria.minRoi,
+                            minWinRate: newCriteria.minWinRate,
+                            minTrades: newCriteria.minTrades
+                        })}
+                    />
 
-                    {/* Error Display */}
                     {error && (
-                        <Alert variant="destructive" className="mb-6">
+                        <Alert variant="destructive">
                             <AlertTitle>Error</AlertTitle>
                             <AlertDescription>{error}</AlertDescription>
                         </Alert>
                     )}
 
-                    {/* Wallet Grid */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className="grid grid-cols-1 lg:grid-cols-2 gap-6"
                     >
                         {loading ? (
-                            <div className="col-span-2 flex justify-center py-12">
+                            <div className="col-span-2 flex justify-center">
                                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
                             </div>
-                        ) : filteredWallets.length > 0 ? (
-                            filteredWallets.map((wallet) => (
+                        ) : wallets.length > 0 ? (
+                            wallets.map((wallet) => (
                                 <WalletCard 
                                     key={wallet.address} 
                                     wallet={wallet}
@@ -180,47 +189,12 @@ export default function Wallets() {
                                 <Alert variant="destructive">
                                     <AlertTitle>No wallets found</AlertTitle>
                                     <AlertDescription>
-                                        Try adjusting your filter criteria or search term.
+                                        Try adjusting your filter criteria.
                                     </AlertDescription>
                                 </Alert>
                             </div>
                         )}
                     </motion.div>
-
-                    {/* Stats Summary */}
-                    {!loading && filteredWallets.length > 0 && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="mt-8 bg-gray-800 rounded-lg p-6"
-                        >
-                            <h2 className="text-xl font-semibold text-white mb-4">Summary</h2>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div>
-                                    <p className="text-gray-400 text-sm">Total Wallets</p>
-                                    <p className="text-2xl font-bold text-white">{filteredWallets.length}</p>
-                                </div>
-                                <div>
-                                    <p className="text-gray-400 text-sm">Average ROI</p>
-                                    <p className="text-2xl font-bold text-white">
-                                        {(filteredWallets.reduce((acc, w) => acc + w.roi_score, 0) / filteredWallets.length).toFixed(2)}%
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-gray-400 text-sm">Average Win Rate</p>
-                                    <p className="text-2xl font-bold text-white">
-                                        {(filteredWallets.reduce((acc, w) => acc + w.win_rate, 0) / filteredWallets.length).toFixed(2)}%
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-gray-400 text-sm">Average Score</p>
-                                    <p className="text-2xl font-bold text-white">
-                                        {(filteredWallets.reduce((acc, w) => acc + w.total_score, 0) / filteredWallets.length).toFixed(2)}
-                                    </p>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
                 </div>
             </main>
         </div>

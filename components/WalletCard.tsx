@@ -102,12 +102,27 @@ export default function WalletCard({ wallet, onRefresh }: WalletProps) {
     }, [isExpanded]);
 
     const handleRefresh = async () => {
-        setRefreshing(true);
-        await fetchCieloData();
-        if (onRefresh) {
-            await onRefresh();
+        try {
+            setRefreshing(true);
+            const response = await fetch(`https://api-production-0673.up.railway.app/proxy/cielo/${wallet.address}`);
+            if (!response.ok) {
+                throw new Error(`Failed to refresh: ${response.statusText}`);
+            }
+            const result = await response.json();
+            if (result.success) {
+                await fetchCieloData();
+            } else {
+                throw new Error(result.message || 'Failed to refresh data');
+            }
+            if (onRefresh) {
+                await onRefresh();
+            }
+        } catch (error) {
+            console.error('Error refreshing wallet:', error);
+            // Optionally show error to user
+        } finally {
+            setRefreshing(false);
         }
-        setRefreshing(false);
     };
 
     // Helper functions from previous implementation

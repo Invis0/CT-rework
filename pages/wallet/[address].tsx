@@ -36,10 +36,32 @@ const API_HEADERS = {
 // Chart colors
 const COLORS = ['#10B981', '#F43F5E', '#6366F1', '#F59E0B', '#8B5CF6'];
 
+interface WalletDetailsData {
+    daily_pnl: Array<{
+        date: string;
+        pnl_usd: number;
+    }>;
+    tokens: Array<{
+        token_symbol: string;
+        total_pnl_usd: number;
+        total_buy_usd: number;
+        total_sell_usd: number;
+        num_swaps: number;
+        roi_percentage: number;
+        is_honeypot: boolean;
+    }>;
+    risk_metrics: {
+        sharpe_ratio: number;
+        max_drawdown: number;
+        win_loss_ratio: number;
+        risk_rating: 'Low' | 'Medium' | 'High';
+    };
+}
+
 export default function WalletDetails() {
     const router = useRouter();
     const { address } = router.query;
-    const [walletData, setWalletData] = useState<any>(null);
+    const [walletData, setWalletData] = useState<WalletDetailsData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [timeframe, setTimeframe] = useState('7d');
