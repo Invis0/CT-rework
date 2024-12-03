@@ -1,5 +1,5 @@
 // pages/index.tsx
-import React, { useState, type ChangeEvent } from 'react';
+import React, { useState, useEffect, type ChangeEvent } from 'react';
 import { motion } from 'framer-motion';
 import { 
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, 
