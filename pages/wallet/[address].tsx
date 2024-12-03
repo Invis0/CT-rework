@@ -56,6 +56,15 @@ interface WalletDetailsData {
         win_loss_ratio: number;
         risk_rating: 'Low' | 'Medium' | 'High';
     };
+    total_pnl_usd: number;
+    winrate: number;
+    successful_trades: number;
+    total_tokens_traded: number;
+    total_roi_percentage: number;
+    total_volume_24h?: number;
+    avg_trade_size?: number;
+    total_buy_usd: number;
+    total_sell_usd: number;
 }
 
 export default function WalletDetails() {
@@ -127,7 +136,12 @@ export default function WalletDetails() {
     if (!walletData) return null;
 
     // Prepare chart data
-    const dailyPnLData = walletData.daily_pnl?.map((day: any) => ({
+    interface DailyPnL {
+        date: string;
+        pnl_usd: number;
+    }
+
+    const dailyPnLData = walletData.daily_pnl?.map((day: DailyPnL) => ({
         date: new Date(day.date).toLocaleDateString(),
         pnl: day.pnl_usd,
     })) || [];
@@ -191,13 +205,13 @@ export default function WalletDetails() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                         <StatCard
                             title="Total PNL"
-                            value={`$${walletData.total_pnl_usd?.toLocaleString() ?? 0}`}
+                            value={`$${walletData.total_pnl_usd?.toLocaleString() ?? '0'}`}
                             trend={walletData.total_pnl_usd > 0}
                             icon={<DollarSign className="text-green-400" />}
                         />
                         <StatCard
                             title="Win Rate"
-                            value={`${walletData.winrate?.toFixed(1) ?? 0}%`}
+                            value={`${walletData.winrate?.toFixed(1) ?? '0'}%`}
                             trend={walletData.winrate > 50}
                             icon={<Activity className="text-blue-400" />}
                             subtitle={`${walletData.successful_trades ?? 0} successful trades`}
@@ -210,7 +224,7 @@ export default function WalletDetails() {
                         />
                         <StatCard
                             title="ROI"
-                            value={`${walletData.total_roi_percentage?.toFixed(2) ?? 0}%`}
+                            value={`${walletData.total_roi_percentage?.toFixed(2) ?? '0'}%`}
                             trend={walletData.total_roi_percentage > 0}
                             icon={<TrendingUp className="text-yellow-400" />}
                         />
