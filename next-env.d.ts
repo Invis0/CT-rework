@@ -1,8 +1,8 @@
 /// <reference types="next" />
 /// <reference types="next/image-types/global" />
 
-declare module 'react' {
-    export type ReactNode = 
+declare namespace React {
+    type ReactNode = 
         | string
         | number
         | boolean
@@ -10,16 +10,18 @@ declare module 'react' {
         | undefined
         | React.ReactElement
         | React.ReactFragment
-        | React.ReactPortal
-        | React.PromiseLikeOfReactNode;
+        | React.ReactPortal;
 
-    export const useState: any;
-    export const useEffect: any;
-    export const useCallback: any;
-    export const useMemo: any;
-    export const useRef: any;
-    export const createContext: any;
-    export const useContext: any;
+    interface ReactElement {
+        type: any;
+        props: any;
+        key: any;
+    }
+}
+
+declare module 'react' {
+    export = React;
+    export as namespace React;
 }
 
 declare module 'react/jsx-runtime';

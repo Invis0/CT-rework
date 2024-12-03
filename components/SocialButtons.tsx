@@ -1,4 +1,4 @@
-import { Twitter, MessageCircle, ExternalLink, Github } from 'lucide-react';
+import { Twitter, MessageCircle, ExternalLink } from 'lucide-react';
 
 export const SocialButtons = () => {
   return (
