@@ -8,6 +8,17 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+interface CieloToken {
+    num_swaps: number;
+    total_buy_usd: number;
+    total_sell_usd: number;
+    total_pnl_usd: number;
+    roi_percentage: number;
+    token_symbol: string;
+    token_name: string;
+    is_honeypot: boolean;
+}
+
 interface TokenMetric {
     symbol: string;
     token_address: string;
@@ -74,16 +85,7 @@ interface CieloData {
     total_roi_percentage: number;
     total_volume_24h?: number;
     avg_trade_size?: number;
-    tokens: Array<{
-        num_swaps: number;
-        total_buy_usd: number;
-        total_sell_usd: number;
-        total_pnl_usd: number;
-        roi_percentage: number;
-        token_symbol: string;
-        token_name: string;
-        is_honeypot: boolean;
-    }>;
+    tokens: CieloToken[];
 }
 
 interface WalletProps {
