@@ -12,7 +12,7 @@ import {
 import Sidebar from '../components/Sidebar';
 import WalletCard from '../components/WalletCard';
 import { Alert, AlertTitle, AlertDescription } from '../components/ui/alert';
-import { Analytics } from "@vercel/analytics/react";
+import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
 import { Guide } from '../components/Guide';
 import { SocialButtons } from '../components/SocialButtons';
 // API base URL
@@ -28,6 +28,20 @@ interface TokenMetric {
     roi_percentage: number;
     avg_position_size: number;
     last_trade_time: string;
+}
+
+interface WalletAnalytics {
+    avg_hold_time_hours: number;
+    avg_swaps_per_token: number;
+    avg_buy_size: number;
+    risk_metrics: {
+        max_drawdown: number;
+        sharpe_ratio: number;
+        volatility: number;
+        risk_rating: 'Low' | 'Medium' | 'High';
+    };
+    is_copyworthy: boolean;
+    copyworthy_reasons: string[];
 }
 
 interface WalletData {
@@ -56,7 +70,7 @@ interface WalletData {
     last_trade_time: string;
     total_volume_24h?: number;
     total_pnl_24h?: number;
-    analytics?: Analytics;
+    analytics?: WalletAnalytics;
 }
 
 interface DashboardStats {
@@ -284,7 +298,7 @@ export default function Dashboard() {
                 onMaximize={() => setIsGuideMinimized(false)}
             />
             <SocialButtons />
-            <Analytics />
+            <VercelAnalytics />
         </div>
     );
 }

@@ -17,7 +17,7 @@ import {
     PieChart as RechartsPieChart, Pie, Cell 
 } from 'recharts';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { TokenMetric, WalletData, Analytics } from '../../types';
+import { TokenMetric, WalletData, WalletAnalytics } from '../../types';
 import type { ReactNode } from 'react';
 
 // Cielo API headers
@@ -68,19 +68,7 @@ interface WalletDetailsData {
     avg_trade_size?: number;
     total_buy_usd: number;
     total_sell_usd: number;
-    analytics?: {
-        avg_hold_time_hours: number;
-        avg_swaps_per_token: number;
-        avg_buy_size: number;
-        risk_metrics: {
-            max_drawdown: number;
-            sharpe_ratio: number;
-            volatility: number;
-            risk_rating: 'Low' | 'Medium' | 'High';
-        };
-        is_copyworthy: boolean;
-        copyworthy_reasons: string[];
-    };
+    analytics?: WalletAnalytics;
 }
 
 interface StatCardProps {

@@ -76,6 +76,20 @@ interface TokenMetric {
     last_trade_time: string;
 }
 
+interface WalletAnalytics {
+    avg_hold_time_hours: number;
+    avg_swaps_per_token: number;
+    avg_buy_size: number;
+    risk_metrics: {
+        max_drawdown: number;
+        sharpe_ratio: number;
+        volatility: number;
+        risk_rating: 'Low' | 'Medium' | 'High';
+    };
+    is_copyworthy: boolean;
+    copyworthy_reasons: string[];
+}
+
 interface WalletData {
     address: string;
     total_pnl_usd: number;
@@ -102,21 +116,7 @@ interface WalletData {
     last_trade_time: string;
     total_volume_24h?: number;
     total_pnl_24h?: number;
-    analytics?: Analytics;
-}
-
-interface Analytics {
-    avg_hold_time_hours: number;
-    avg_swaps_per_token: number;
-    avg_buy_size: number;
-    risk_metrics: {
-        max_drawdown: number;
-        sharpe_ratio: number;
-        volatility: number;
-        risk_rating: 'Low' | 'Medium' | 'High';
-    };
-    is_copyworthy: boolean;
-    copyworthy_reasons: string[];
+    analytics?: WalletAnalytics;
 }
 
 export default function WalletCard({ wallet, onRefresh, className }: WalletProps) {
