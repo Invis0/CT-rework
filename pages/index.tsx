@@ -116,21 +116,41 @@ export default function Dashboard() {
             setError(null);
 
             const [walletsResponse, statsResponse] = await Promise.all([
-                fetch(`https://api-production-0673.up.railway.app/wallets/top?min_roi=${selectedMetrics.minRoi}&min_win_rate=${selectedMetrics.minWinRate}&min_trades=${selectedMetrics.minTrades}`),
-                fetch(`https://api-production-0673.up.railway.app/stats/overview`)
+                fetch(`${API_URL}/wallets/top?min_roi=${selectedMetrics.minRoi}&min_win_rate=${selectedMetrics.minWinRate}&min_trades=${selectedMetrics.minTrades}`),
+                fetch(`${API_URL}/stats/overview`)
             ]);
 
             if (!walletsResponse.ok || !statsResponse.ok) {
                 throw new Error('Failed to fetch data');
             }
 
-            const [walletsData, statsData]: [WalletData[], DashboardStats] = await Promise.all([
-                walletsResponse.json(),
-                statsResponse.json()
-            ]);
+            const walletsData = await walletsResponse.json();
+            const statsData = await statsResponse.json();
 
-            setTopWallets(walletsData || []);
-            setStats(statsData);
+            // Check if walletsData has the expected structure
+            if (Array.isArray(walletsData)) {
+                setTopWallets(walletsData);
+            } else if (walletsData.data && Array.isArray(walletsData.data)) {
+                setTopWallets(walletsData.data);
+            } else {
+                setTopWallets([]);
+            }
+
+            // Check if statsData has the expected structure
+            if (statsData && typeof statsData === 'object') {
+                setStats({
+                    total_wallets: statsData.total_wallets || 0,
+                    total_volume: statsData.total_volume || 0,
+                    total_trades: statsData.total_trades || 0,
+                    avg_roi: statsData.avg_roi || 0,
+                    change: {
+                        wallets: statsData.change?.wallets || 0,
+                        volume: statsData.change?.volume || 0,
+                        trades: statsData.change?.trades || 0,
+                        roi: statsData.change?.roi || 0
+                    }
+                });
+            }
         } catch (error) {
             console.error('Error fetching data:', error);
             setError('Failed to fetch data. Please try again.');
