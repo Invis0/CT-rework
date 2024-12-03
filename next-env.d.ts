@@ -18,6 +18,15 @@ declare module 'react' {
     export const createContext: any;
     export const useRef: any;
     export const useMemo: any;
+    export type ReactNode = 
+        | string
+        | number
+        | boolean
+        | null
+        | undefined
+        | React.ReactElement
+        | React.ReactFragment
+        | React.ReactPortal;
 }
 
 declare module 'react/jsx-runtime';
