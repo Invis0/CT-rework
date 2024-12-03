@@ -1,5 +1,4 @@
 import React from 'react';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 interface Props {
     children: React.ReactNode;
@@ -19,20 +18,14 @@ class ErrorBoundary extends React.Component<Props, State> {
         return { hasError: true, error };
     }
 
-    public componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-        console.error('Uncaught error:', error, errorInfo);
-    }
-
     public render() {
         if (this.state.hasError) {
             return (
                 <div className="flex h-screen items-center justify-center bg-gray-900">
-                    <Alert variant="destructive" className="max-w-md">
-                        <AlertTitle>Something went wrong</AlertTitle>
-                        <AlertDescription>
-                            {this.state.error?.message || 'An unexpected error occurred'}
-                        </AlertDescription>
-                    </Alert>
+                    <div className="bg-red-900/20 text-red-500 p-4 rounded-lg">
+                        <h2 className="text-lg font-bold mb-2">Something went wrong</h2>
+                        <p className="text-sm">{this.state.error?.message}</p>
+                    </div>
                 </div>
             );
         }
