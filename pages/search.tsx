@@ -4,7 +4,6 @@ import { Search as SearchIcon, AlertCircle } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import WalletCard from '../components/WalletCard';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { TokenMetric, WalletData, Analytics } from '../types';
 
 interface CieloToken {
     num_swaps: number;
@@ -31,15 +30,55 @@ interface CieloResponse {
         total_roi_percentage: number;
         total_volume: number;
         total_pnl_usd: number;
-        analytics?: Analytics;
+        analytics?: WalletAnalytics;
     };
+}
+
+interface TokenMetric {
+    symbol: string;
+    token_address: string;
+    num_swaps: number;
+    total_buy_usd: number;
+    total_sell_usd: number;
+    total_pnl_usd: number;
+    roi_percentage: number;
+    avg_position_size: number;
+    last_trade_time: string;
+}
+
+interface WalletAnalytics {
+    avg_hold_time_hours: number;
+    avg_swaps_per_token: number;
+    avg_buy_size: number;
+    risk_metrics: {
+        max_drawdown: number;
+        sharpe_ratio: number;
+        volatility: number;
+        risk_rating: 'Low' | 'Medium' | 'High';
+    };
+    is_copyworthy: boolean;
+    copyworthy_reasons: string[];
+}
+
+interface WalletData {
+    address: string;
+    total_pnl_usd: number;
+    winrate: number;
+    total_trades: number;
+    roi_percentage: number;
+    avg_trade_size: number;
+    total_volume: number;
+    last_updated: string;
+    consistency_score: number;
+    token_metrics: TokenMetric[];
+    analytics?: WalletAnalytics;
 }
 
 export default function SearchWallet() {
     const [address, setAddress] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [walletData, setWalletData] = useState<WalletResponse | null>(null);
+    const [walletData, setWalletData] = useState<WalletData | null>(null);
     const [cieloData, setCieloData] = useState<CieloResponse | null>(null);
 
     const searchWallet = async () => {
@@ -67,7 +106,7 @@ export default function SearchWallet() {
                     throw new Error('Failed to fetch wallet data from Cielo');
                 }
 
-                const transformedData: WalletResponse = {
+                const transformedData: WalletData = {
                     address: address,
                     total_pnl_usd: cieloData.data.total_pnl_usd || 0,
                     winrate: cieloData.data.winrate || 0,
@@ -88,21 +127,6 @@ export default function SearchWallet() {
                         avg_position_size: token.average_buy_price * token.total_buy_amount,
                         last_trade_time: new Date(token.last_trade * 1000).toISOString()
                     })) || [],
-                    risk_metrics: {
-                        max_drawdown: cieloData.data.analytics?.risk_metrics.max_drawdown || 0,
-                        sharpe_ratio: cieloData.data.analytics?.risk_metrics.sharpe_ratio || 0,
-                        sortino_ratio: 0,
-                        risk_rating: cieloData.data.analytics?.risk_metrics.risk_rating || 'Medium',
-                        volatility: cieloData.data.analytics?.risk_metrics.volatility || 0
-                    },
-                    total_score: 0,
-                    roi_score: 0,
-                    volume_score: 0,
-                    risk_score: 0,
-                    max_drawdown: cieloData.data.analytics?.risk_metrics.max_drawdown || 0,
-                    last_trade_time: new Date().toISOString(),
-                    total_volume_24h: cieloData.data.total_volume_24h,
-                    total_pnl_24h: cieloData.data.total_pnl_24h,
                     analytics: cieloData.data.analytics
                 };
 
@@ -215,20 +239,20 @@ export default function SearchWallet() {
                                     <div className="space-y-4">
                                         <div>
                                             <span className="text-gray-400">Risk Rating</span>
-                                            <p className={`text-lg font-semibold ${getRiskColor(walletData.risk_metrics?.risk_rating)}`}>
-                                                {walletData.risk_metrics?.risk_rating || 'N/A'}
+                                            <p className={`text-lg font-semibold ${getRiskColor(walletData.analytics?.risk_metrics?.risk_rating)}`}>
+                                                {walletData.analytics?.risk_metrics?.risk_rating || 'N/A'}
                                             </p>
                                         </div>
                                         <div>
                                             <span className="text-gray-400">Max Drawdown</span>
                                             <p className="text-lg font-semibold text-white">
-                                                {walletData.risk_metrics?.max_drawdown?.toFixed(2) || '0'}%
+                                                {walletData.analytics?.risk_metrics?.max_drawdown?.toFixed(2) || '0'}%
                                             </p>
                                         </div>
                                         <div>
                                             <span className="text-gray-400">Sharpe Ratio</span>
                                             <p className="text-lg font-semibold text-white">
-                                                {walletData.risk_metrics?.sharpe_ratio?.toFixed(2) || '0'}
+                                                {walletData.analytics?.risk_metrics?.sharpe_ratio?.toFixed(2) || '0'}
                                             </p>
                                         </div>
                                     </div>
@@ -240,19 +264,19 @@ export default function SearchWallet() {
                                         <div>
                                             <span className="text-gray-400">ROI Score</span>
                                             <p className="text-lg font-semibold text-white">
-                                                {walletData.roi_score?.toFixed(1) || '0'}
+                                                {walletData.analytics?.roi_score?.toFixed(1) || '0'}
                                             </p>
                                         </div>
                                         <div>
                                             <span className="text-gray-400">Consistency</span>
                                             <p className="text-lg font-semibold text-white">
-                                                {walletData.consistency_score?.toFixed(1) || '0'}
+                                                {walletData.analytics?.consistency_score?.toFixed(1) || '0'}
                                             </p>
                                         </div>
                                         <div>
                                             <span className="text-gray-400">Volume Score</span>
                                             <p className="text-lg font-semibold text-white">
-                                                {walletData.volume_score?.toFixed(1) || '0'}
+                                                {walletData.analytics?.volume_score?.toFixed(1) || '0'}
                                             </p>
                                         </div>
                                     </div>
@@ -270,7 +294,7 @@ export default function SearchWallet() {
                                         <div>
                                             <span className="text-gray-400">Last Trade</span>
                                             <p className="text-lg font-semibold text-white">
-                                                {formatTimeAgo(walletData.last_trade_time)}
+                                                {formatTimeAgo(walletData.last_updated)}
                                             </p>
                                         </div>
                                         <div>
@@ -300,7 +324,7 @@ export default function SearchWallet() {
                                                     total_volume_24h: result.data.total_volume_24h,
                                                     total_pnl_24h: result.data.total_pnl_24h,
                                                     analytics: result.data.analytics
-                                                } as WalletResponse;
+                                                } as WalletData;
                                             });
                                         }
                                     } catch (error) {

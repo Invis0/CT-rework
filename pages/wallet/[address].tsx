@@ -17,8 +17,6 @@ import {
     PieChart as RechartsPieChart, Pie, Cell 
 } from 'recharts';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { TokenMetric, WalletData, WalletAnalytics } from '../../types';
-import type { ReactNode } from 'react';
 
 // Cielo API headers
 const API_HEADERS = {
@@ -38,7 +36,34 @@ const API_HEADERS = {
 // Chart colors
 const COLORS = ['#10B981', '#F43F5E', '#6366F1', '#F59E0B', '#8B5CF6'];
 
-interface WalletDetailsData {
+// Add interfaces directly at the top
+interface TokenMetric {
+    symbol: string;
+    token_address: string;
+    num_swaps: number;
+    total_buy_usd: number;
+    total_sell_usd: number;
+    total_pnl_usd: number;
+    roi_percentage: number;
+    avg_position_size: number;
+    last_trade_time: string;
+}
+
+interface WalletAnalytics {
+    avg_hold_time_hours: number;
+    avg_swaps_per_token: number;
+    avg_buy_size: number;
+    risk_metrics: {
+        max_drawdown: number;
+        sharpe_ratio: number;
+        volatility: number;
+        risk_rating: 'Low' | 'Medium' | 'High';
+    };
+    is_copyworthy: boolean;
+    copyworthy_reasons: string[];
+}
+
+interface WalletData {
     daily_pnl: Array<{
         date: string;
         pnl_usd: number;
@@ -91,7 +116,7 @@ const API_URL = 'https://api-production-0673.up.railway.app';
 export default function WalletDetails() {
     const router = useRouter();
     const { address } = router.query;
-    const [walletData, setWalletData] = useState<WalletDetailsData | null>(null);
+    const [walletData, setWalletData] = useState<WalletData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [timeframe, setTimeframe] = useState('7d');
@@ -180,7 +205,7 @@ export default function WalletDetails() {
         pnl: day.pnl_usd,
     })) || [];
 
-    const tokenDistributionData = walletData.tokens?.map((token: WalletDetailsData['tokens'][0]): TokenDistribution => ({
+    const tokenDistributionData = walletData.tokens?.map((token: WalletData['tokens'][0]): TokenDistribution => ({
         name: token.token_symbol,
         value: Math.abs(token.total_pnl_usd),
         profit: token.total_pnl_usd > 0,
