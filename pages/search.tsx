@@ -87,16 +87,73 @@ export default function SearchWallet() {
             setLoading(true);
             setError(null);
             
-            const [dbResponse, cieloResponse] = await Promise.all([
-                fetch(`https://api-production-0673.up.railway.app/wallets/${address}`),
-                fetch(`https://api-production-0673.up.railway.app/proxy/cielo/${address}`)
-            ]);
-
+            // First try to get data from our database
+            const dbResponse = await fetch(`https://api-production-0673.up.railway.app/wallets/${address}`);
+            
             if (!dbResponse.ok) {
-                throw new Error(`Failed to fetch wallet data: ${dbResponse.statusText}`);
+                // If wallet not in database, try Cielo directly
+                const cieloResponse = await fetch(`https://api-production-0673.up.railway.app/proxy/cielo/${address}`);
+                
+                if (!cieloResponse.ok) {
+                    throw new Error('Wallet not found in any data source');
+                }
+
+                const cieloData = await cieloResponse.json();
+                
+                if (!cieloData.success) {
+                    throw new Error('Failed to fetch wallet data from Cielo');
+                }
+
+                // Transform Cielo data to match our format
+                const transformedData: WalletResponse = {
+                    address: address,
+                    total_pnl_usd: cieloData.data.total_pnl_usd || 0,
+                    winrate: cieloData.data.winrate || 0,
+                    total_trades: cieloData.data.total_tokens_traded || 0,
+                    roi_percentage: cieloData.data.total_roi_percentage || 0,
+                    avg_trade_size: cieloData.data.avg_trade_size || 0,
+                    total_volume: cieloData.data.total_volume || 0,
+                    last_updated: new Date().toISOString(),
+                    consistency_score: 0,
+                    token_metrics: cieloData.data.tokens?.map(token => ({
+                        symbol: token.token_symbol,
+                        token_address: '',
+                        num_swaps: token.num_swaps,
+                        total_buy_usd: token.total_buy_usd,
+                        total_sell_usd: token.total_sell_usd,
+                        total_pnl_usd: token.total_pnl_usd,
+                        roi_percentage: token.roi_percentage,
+                        avg_position_size: 0,
+                        last_trade_time: new Date().toISOString()
+                    })) || [],
+                    risk_metrics: {
+                        max_drawdown: 0,
+                        sharpe_ratio: 0,
+                        sortino_ratio: 0,
+                        risk_rating: 'Medium',
+                        volatility: 0
+                    },
+                    total_score: 0,
+                    roi_score: 0,
+                    volume_score: 0,
+                    risk_score: 0,
+                    max_drawdown: 0,
+                    last_trade_time: new Date().toISOString(),
+                    total_volume_24h: cieloData.data.total_volume_24h,
+                    total_pnl_24h: cieloData.data.total_pnl_24h,
+                    additional_metrics: cieloData.data.tokens
+                };
+
+                setWalletData(transformedData);
+                setCieloData(cieloData.data);
+                return;
             }
 
+            // If we have data in our database
             const dbData = await dbResponse.json();
+            
+            // Get additional data from Cielo
+            const cieloResponse = await fetch(`https://api-production-0673.up.railway.app/proxy/cielo/${address}`);
             let cieloResult = null;
 
             if (cieloResponse.ok) {
@@ -107,6 +164,7 @@ export default function SearchWallet() {
                 }
             }
 
+            // Combine data from both sources
             setWalletData({
                 ...dbData,
                 ...(cieloResult && {

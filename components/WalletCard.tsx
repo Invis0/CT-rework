@@ -38,15 +38,33 @@ interface WalletData {
     total_volume: number;
     last_updated: string;
     consistency_score: number;
-    token_metrics: TokenMetric[];
-    risk_metrics: RiskMetric;
+    token_metrics: Array<{
+        symbol: string;
+        token_address: string;
+        num_swaps: number;
+        total_buy_usd: number;
+        total_sell_usd: number;
+        total_pnl_usd: number;
+        roi_percentage: number;
+        avg_position_size: number;
+        last_trade_time: string;
+    }>;
+    risk_metrics: {
+        max_drawdown: number;
+        sharpe_ratio: number;
+        sortino_ratio: number;
+        risk_rating: 'Low' | 'Medium' | 'High';
+        volatility: number;
+    };
     total_score: number;
     roi_score: number;
     volume_score: number;
     risk_score: number;
     max_drawdown: number;
     last_trade_time: string;
-    token_stats?: any[];
+    total_volume_24h?: number;
+    total_pnl_24h?: number;
+    additional_metrics?: CieloToken[];
 }
 
 interface CieloData {
@@ -253,13 +271,13 @@ export default function WalletCard({ wallet, onRefresh }: WalletProps) {
                             <span className="text-sm">Win Rate</span>
                         </div>
                         <p className="text-lg font-semibold text-white">
-                            {(cieloData?.winrate || wallet.winrate).toFixed(1)}%
+                            {(wallet.winrate).toFixed(1)}%
                         </p>
                         <span className={`text-xs px-2 py-1 rounded-full inline-block ${
-                            getBadgeColor(cieloData?.winrate || wallet.winrate, [50, 70])
+                            getBadgeColor(wallet.winrate, [50, 70])
                         }`}>
-                            {(cieloData?.winrate || wallet.winrate) >= 70 ? 'Excellent' : 
-                             (cieloData?.winrate || wallet.winrate) >= 50 ? 'Good' : 'Poor'}
+                            {wallet.winrate >= 70 ? 'Excellent' : 
+                             wallet.winrate >= 50 ? 'Good' : 'Poor'}
                         </span>
                     </div>
 
@@ -279,7 +297,7 @@ export default function WalletCard({ wallet, onRefresh }: WalletProps) {
                     </div>
                 </div>
 
-                {/* Risk Metrics continued */}
+                {/* Risk Metrics */}
                 <div className="p-4 bg-gray-700/50 rounded-lg mb-4">
                     <div className="flex justify-between items-center text-sm">
                         <span className="text-gray-400">Risk Level</span>
@@ -291,11 +309,11 @@ export default function WalletCard({ wallet, onRefresh }: WalletProps) {
                     <div className="flex justify-between items-center text-sm mt-2">
                         <span className="text-gray-400">Max Drawdown</span>
                         <span className={`font-medium ${
-                            (wallet.max_drawdown || 0) <= 20 ? 'text-green-400' : 
-                            (wallet.max_drawdown || 0) <= 40 ? 'text-yellow-400' : 
+                            (wallet.risk_metrics?.max_drawdown || 0) <= 20 ? 'text-green-400' : 
+                            (wallet.risk_metrics?.max_drawdown || 0) <= 40 ? 'text-yellow-400' : 
                             'text-red-400'
                         }`}>
-                            {wallet.max_drawdown?.toFixed(2) || '0.00'}%
+                            {wallet.risk_metrics?.max_drawdown?.toFixed(2) || '0.00'}%
                         </span>
                     </div>
 
@@ -308,11 +326,11 @@ export default function WalletCard({ wallet, onRefresh }: WalletProps) {
                         </div>
                     )}
                     
-                    {cieloData && (
+                    {wallet.avg_trade_size && (
                         <div className="flex justify-between items-center text-sm mt-2">
-                            <span className="text-gray-400">24h Volume</span>
+                            <span className="text-gray-400">Avg Trade Size</span>
                             <span className="text-white">
-                                ${cieloData.total_volume_24h?.toLocaleString() ?? '0'}
+                                ${wallet.avg_trade_size.toLocaleString()}
                             </span>
                         </div>
                     )}
@@ -321,21 +339,21 @@ export default function WalletCard({ wallet, onRefresh }: WalletProps) {
                 {/* Detailed Scores */}
                 <div className="grid grid-cols-3 gap-2 bg-gray-700/30 rounded-lg p-3">
                     <div className="text-center">
-                        <div className="text-xs text-gray-400">ROI</div>
+                        <div className="text-xs text-gray-400">ROI Score</div>
                         <div className={`text-${wallet.roi_score >= 75 ? 'green' : wallet.roi_score >= 50 ? 'yellow' : 'red'}-400`}>
-                            {wallet.roi_score.toFixed(1)}
+                            {wallet.roi_score?.toFixed(1)}
                         </div>
                     </div>
                     <div className="text-center">
                         <div className="text-xs text-gray-400">Consistency</div>
                         <div className={`text-${wallet.consistency_score >= 75 ? 'green' : wallet.consistency_score >= 50 ? 'yellow' : 'red'}-400`}>
-                            {wallet.consistency_score.toFixed(1)}
+                            {wallet.consistency_score?.toFixed(1)}
                         </div>
                     </div>
                     <div className="text-center">
-                        <div className="text-xs text-gray-400">Volume</div>
+                        <div className="text-xs text-gray-400">Volume Score</div>
                         <div className={`text-${wallet.volume_score >= 75 ? 'green' : wallet.volume_score >= 50 ? 'yellow' : 'red'}-400`}>
-                            {wallet.volume_score.toFixed(1)}
+                            {wallet.volume_score?.toFixed(1)}
                         </div>
                     </div>
                 </div>
@@ -352,39 +370,23 @@ export default function WalletCard({ wallet, onRefresh }: WalletProps) {
                             Recent Activity
                         </h4>
                         <div className="space-y-2">
-                            {(cieloData?.tokens || wallet.token_stats || []).slice(0, 3).map((token: any, index: number) => (
+                            {(wallet.token_metrics || []).slice(0, 3).map((token, index) => (
                                 <div 
                                     key={index}
                                     className="flex justify-between items-center bg-gray-700/30 rounded-lg p-2"
                                 >
-                                    <span className="text-gray-300">{token.token_symbol || token.symbol}</span>
+                                    <span className="text-gray-300">{token.symbol}</span>
                                     <div className="flex items-center gap-4">
                                         <span className="text-sm text-gray-400">
-                                            {token.num_swaps || token.trades || 0} trades
+                                            {token.num_swaps} trades
                                         </span>
-                                        <span className={`${(token.roi_percentage || token.roi || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                            {(token.roi_percentage || token.roi || 0).toFixed(1)}%
+                                        <span className={`${token.roi_percentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                            {token.roi_percentage.toFixed(1)}%
                                         </span>
                                     </div>
                                 </div>
                             ))}
                         </div>
-
-                        {cieloData && (
-                            <div className="mt-4 p-3 bg-gray-700/30 rounded-lg">
-                                <h5 className="text-sm font-semibold text-gray-300 mb-2">Additional Metrics</h5>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <span className="text-xs text-gray-400">Total Tokens</span>
-                                        <p className="text-white">{cieloData.total_tokens_traded}</p>
-                                    </div>
-                                    <div>
-                                        <span className="text-xs text-gray-400">Avg Trade Size</span>
-                                        <p className="text-white">${cieloData.avg_trade_size?.toLocaleString()}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
                     </motion.div>
                 )}
             </div>
