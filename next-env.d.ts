@@ -1,30 +1,23 @@
 /// <reference types="next" />
 /// <reference types="next/image-types/global" />
+/// <reference path="./types/global.d.ts" />
+
+declare namespace JSX {
+    interface Element {}
+    interface IntrinsicElements {
+        [elemName: string]: any;
+    }
+}
 
 declare module 'react' {
     export * from 'react/index';
-    export const useState: <T>(initialState: T | (() => T)) => [T, (newState: T | ((prevState: T) => T)) => void];
-    export const useEffect: (effect: () => void | (() => void), deps?: ReadonlyArray<any>) => void;
-    export const useCallback: <T extends (...args: any[]) => any>(callback: T, deps: ReadonlyArray<any>) => T;
-    export const useContext: <T>(context: React.Context<T>) => T;
-    export const createContext: <T>(defaultValue: T) => React.Context<T>;
-    export const useRef: <T>(initialValue: T) => { current: T };
-    export const useMemo: <T>(factory: () => T, deps: ReadonlyArray<any>) => T;
-
-    export interface ChangeEvent<T = Element> {
-        target: T;
-        currentTarget: T;
-    }
-
-    export type ReactNode = 
-        | string
-        | number
-        | boolean
-        | null
-        | undefined
-        | React.ReactElement
-        | React.ReactFragment
-        | React.ReactPortal;
+    export const useState: any;
+    export const useEffect: any;
+    export const useCallback: any;
+    export const useContext: any;
+    export const createContext: any;
+    export const useRef: any;
+    export const useMemo: any;
 }
 
 declare module 'react/jsx-runtime';
@@ -36,12 +29,6 @@ declare module '@vercel/analytics/react';
 declare module 'recharts';
 declare module 'clsx';
 declare module 'tailwind-merge';
-
-declare namespace JSX {
-    interface IntrinsicElements {
-        [elemName: string]: any;
-    }
-}
 
 interface Window {
     ethereum?: any;

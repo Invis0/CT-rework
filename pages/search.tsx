@@ -8,6 +8,7 @@ import type { ReactNode, ChangeEvent } from 'react';
 import Sidebar from '../components/Sidebar';
 import WalletCard from '../components/WalletCard';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import type { WalletData } from '../types/global';
 
 interface CieloToken {
     num_swaps: number;
@@ -38,18 +39,6 @@ interface CieloResponse {
     };
 }
 
-interface TokenMetric {
-    symbol: string;
-    token_address: string;
-    num_swaps: number;
-    total_buy_usd: number;
-    total_sell_usd: number;
-    total_pnl_usd: number;
-    roi_percentage: number;
-    avg_position_size: number;
-    last_trade_time: string;
-}
-
 interface WalletAnalytics {
     avg_hold_time_hours: number;
     avg_swaps_per_token: number;
@@ -65,27 +54,6 @@ interface WalletAnalytics {
     roi_score: number;
     consistency_score: number;
     volume_score: number;
-}
-
-interface WalletData {
-    address: string;
-    total_pnl_usd: number;
-    winrate: number;
-    total_trades: number;
-    roi_percentage: number;
-    avg_trade_size: number;
-    total_volume: number;
-    last_updated: string;
-    consistency_score: number;
-    token_metrics: TokenMetric[];
-    analytics?: WalletAnalytics;
-    roi_score: number;
-    volume_score: number;
-    risk_score: number;
-    max_drawdown: number;
-    last_trade_time: string;
-    total_volume_24h?: number;
-    total_pnl_24h?: number;
 }
 
 export default function SearchWallet() {
