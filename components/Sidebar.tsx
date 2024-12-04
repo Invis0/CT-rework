@@ -16,7 +16,7 @@ export default function Sidebar() {
     const router = useRouter();
 
     const menuItems = [
-        { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
+        { icon: LayoutDashboard, label: 'Dashboardcc', href: '/' },
         { icon: Wallet, label: 'Top Wallets', href: '/wallets' },
         { icon: Search, label: 'Search Wallet', href: '/search' },
         { icon: Bell, label: 'Alerts', href: '/alerts' },
