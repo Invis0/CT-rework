@@ -1,5 +1,5 @@
 // pages/index.tsx
-import React, { useState, useEffect, type ChangeEvent, type ReactNode } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, 
@@ -12,37 +12,11 @@ import {
 import Sidebar from '../components/Sidebar';
 import WalletCard from '../components/WalletCard';
 import { Alert, AlertTitle, AlertDescription } from '../components/ui/alert';
-import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
+import { Analytics } from "@vercel/analytics/react";
 import { Guide } from '../components/Guide';
 import { SocialButtons } from '../components/SocialButtons';
 // API base URL
-const API_URL = 'https://api-production-0673.up.railway.app';
-
-interface TokenMetric {
-    symbol: string;
-    token_address: string;
-    num_swaps: number;
-    total_buy_usd: number;
-    total_sell_usd: number;
-    total_pnl_usd: number;
-    roi_percentage: number;
-    avg_position_size: number;
-    last_trade_time: string;
-}
-
-interface WalletAnalytics {
-    avg_hold_time_hours: number;
-    avg_swaps_per_token: number;
-    avg_buy_size: number;
-    risk_metrics: {
-        max_drawdown: number;
-        sharpe_ratio: number;
-        volatility: number;
-        risk_rating: 'Low' | 'Medium' | 'High';
-    };
-    is_copyworthy: boolean;
-    copyworthy_reasons: string[];
-}
+const API_URL = 'http://localhost:8000';
 
 interface WalletData {
     address: string;
@@ -54,7 +28,17 @@ interface WalletData {
     total_volume: number;
     last_updated: string;
     consistency_score: number;
-    token_metrics: TokenMetric[];
+    token_metrics: Array<{
+        symbol: string;
+        token_address: string;
+        num_swaps: number;
+        total_buy_usd: number;
+        total_sell_usd: number;
+        total_pnl_usd: number;
+        roi_percentage: number;
+        avg_position_size: number;
+        last_trade_time: string;
+    }>;
     risk_metrics: {
         max_drawdown: number;
         sharpe_ratio: number;
@@ -70,27 +54,29 @@ interface WalletData {
     last_trade_time: string;
     total_volume_24h?: number;
     total_pnl_24h?: number;
-    analytics?: WalletAnalytics;
+    additional_metrics?: Array<{
+        num_swaps: number;
+        total_buy_usd: number;
+        total_sell_usd: number;
+        total_pnl_usd: number;
+        roi_percentage: number;
+        token_symbol: string;
+        token_name: string;
+        is_honeypot: boolean;
+    }>;
 }
 
 interface DashboardStats {
     total_wallets: number;
-    total_volume: number;
-    total_trades: number;
-    avg_roi: number;
-    change: {
-        wallets: number;
-        volume: number;
-        trades: number;
-        roi: number;
-    };
-}
-
-interface StatCardProps {
-    title: string;
-    value: string;
-    icon: ReactNode;
-    change: number;
+    average_roi: number;
+    top_performers: number;
+    average_winrate: number;
+    trends?: Array<{
+        wallet_count_change: number;
+        roi_change: number;
+        top_performers_change: number;
+        winrate_change: number;
+    }>;
 }
 
 export default function Dashboard() {
@@ -116,64 +102,21 @@ export default function Dashboard() {
             setError(null);
 
             const [walletsResponse, statsResponse] = await Promise.all([
-                fetch(`${API_URL}/wallets/top?min_roi=${selectedMetrics.minRoi}&min_win_rate=${selectedMetrics.minWinRate}&min_trades=${selectedMetrics.minTrades}`),
-                fetch(`${API_URL}/stats/overview`)
+                fetch(`https://api-production-0673.up.railway.app/wallets/top?min_roi=${selectedMetrics.minRoi}&min_win_rate=${selectedMetrics.minWinRate}&min_trades=${selectedMetrics.minTrades}`),
+                fetch(`https://api-production-0673.up.railway.app/stats/overview`)
             ]);
 
             if (!walletsResponse.ok || !statsResponse.ok) {
                 throw new Error('Failed to fetch data');
             }
 
-            const walletsData = await walletsResponse.json();
-            const statsData = await statsResponse.json();
+            const [walletsData, statsData]: [WalletData[], DashboardStats] = await Promise.all([
+                walletsResponse.json(),
+                statsResponse.json()
+            ]);
 
-            // Transform wallet data to match WalletData interface
-            const transformedWallets = walletsData.map((wallet: any) => ({
-                address: wallet.address || wallet.wallet_address, // Handle both possible field names
-                total_pnl_usd: Number(wallet.total_pnl || wallet.total_pnl_usd || 0),
-                winrate: Number(wallet.win_rate || wallet.winrate || 0),
-                total_trades: Number(wallet.trade_count || wallet.total_trades || 0),
-                roi_percentage: Number(wallet.roi || wallet.roi_percentage || 0),
-                avg_trade_size: Number(wallet.avg_trade_size || 0),
-                total_volume: Number(wallet.volume || wallet.total_volume || 0),
-                last_updated: wallet.last_updated || new Date().toISOString(),
-                consistency_score: Number(wallet.consistency_score || 0),
-                token_metrics: Array.isArray(wallet.tokens) ? wallet.tokens : (wallet.token_metrics || []),
-                risk_metrics: wallet.risk_metrics || {
-                    max_drawdown: Number(wallet.max_drawdown || 0),
-                    sharpe_ratio: Number(wallet.sharpe_ratio || 0),
-                    sortino_ratio: Number(wallet.sortino_ratio || 0),
-                    risk_rating: wallet.risk_rating || 'Medium',
-                    volatility: Number(wallet.volatility || 0)
-                },
-                total_score: Number(wallet.total_score || wallet.scores?.total_score || 0),
-                roi_score: Number(wallet.roi_score || wallet.scores?.roi_score || 0),
-                volume_score: Number(wallet.volume_score || wallet.scores?.volume_score || 0),
-                risk_score: Number(wallet.risk_score || wallet.scores?.risk_score || 0),
-                max_drawdown: Number(wallet.max_drawdown || 0),
-                last_trade_time: wallet.last_trade_time || wallet.last_updated || new Date().toISOString(),
-                total_volume_24h: Number(wallet.total_volume_24h || 0),
-                total_pnl_24h: Number(wallet.total_pnl_24h || 0),
-                analytics: wallet.analytics || null
-            }));
-
-            console.log('Transformed Wallets:', transformedWallets); // Debug log
-            setTopWallets(transformedWallets);
-
-            if (statsData) {
-                setStats({
-                    total_wallets: Number(statsData.total_wallets || 0),
-                    total_volume: Number(statsData.total_volume || 0),
-                    total_trades: Number(statsData.total_trades || 0),
-                    avg_roi: Number(statsData.average_roi || statsData.avg_roi || 0),
-                    change: {
-                        wallets: Number(statsData.trends?.[0]?.wallet_count_change || 0),
-                        volume: Number(statsData.trends?.[0]?.volume_change || 0),
-                        trades: Number(statsData.trends?.[0]?.trades_change || 0),
-                        roi: Number(statsData.trends?.[0]?.roi_change || 0)
-                    }
-                });
-            }
+            setTopWallets(walletsData || []);
+            setStats(statsData);
         } catch (error) {
             console.error('Error fetching data:', error);
             setError('Failed to fetch data. Please try again.');
@@ -227,25 +170,25 @@ export default function Dashboard() {
                                 title="Total Wallets"
                                 value={stats.total_wallets.toLocaleString()}
                                 icon={<Wallet className="text-blue-500" />}
-                                change={stats.change.wallets}
+                                change={stats.trends?.[0]?.wallet_count_change || 0}
                             />
                             <StatsCard
                                 title="Average ROI"
-                                value={`${stats.avg_roi.toFixed(2)}%`}
+                                value={`${stats.average_roi.toFixed(2)}%`}
                                 icon={<TrendingUp className="text-green-500" />}
-                                change={stats.change.roi}
+                                change={stats.trends?.[0]?.roi_change || 0}
                             />
                             <StatsCard
                                 title="Top Performers"
-                                value={stats.total_wallets.toLocaleString()}
+                                value={stats.top_performers.toLocaleString()}
                                 icon={<Award className="text-yellow-500" />}
-                                change={stats.change.wallets}
+                                change={stats.trends?.[0]?.top_performers_change || 0}
                             />
                             <StatsCard
                                 title="Avg Win Rate"
-                                value={`${stats.total_wallets.toLocaleString()}%`}
+                                value={`${stats.average_winrate.toFixed(1)}%`}
                                 icon={<AlertTriangle className="text-purple-500" />}
-                                change={stats.change.wallets}
+                                change={stats.trends?.[0]?.winrate_change || 0}
                             />
                         </motion.div>
                     )}
@@ -259,7 +202,7 @@ export default function Dashboard() {
                                 <input
                                     type="number"
                                     value={selectedMetrics.minRoi}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSelectedMetrics({
+                                    onChange={(e) => setSelectedMetrics({
                                         ...selectedMetrics,
                                         minRoi: Number(e.target.value)
                                     })}
@@ -271,7 +214,7 @@ export default function Dashboard() {
                                 <input
                                     type="number"
                                     value={selectedMetrics.minWinRate}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSelectedMetrics({
+                                    onChange={(e) => setSelectedMetrics({
                                         ...selectedMetrics,
                                         minWinRate: Number(e.target.value)
                                     })}
@@ -283,7 +226,7 @@ export default function Dashboard() {
                                 <input
                                     type="number"
                                     value={selectedMetrics.minTrades}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSelectedMetrics({
+                                    onChange={(e) => setSelectedMetrics({
                                         ...selectedMetrics,
                                         minTrades: Number(e.target.value)
                                     })}
@@ -312,14 +255,8 @@ export default function Dashboard() {
                                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
                             </div>
                         ) : filteredWallets.length > 0 ? (
-                            filteredWallets.map((wallet: WalletData) => (
-                                <WalletCard 
-                                    key={wallet.address} 
-                                    wallet={wallet} 
-                                    onRefresh={async () => {
-                                        await fetchData();
-                                    }}
-                                />
+                            filteredWallets.map((wallet) => (
+                                <WalletCard key={wallet.address} wallet={wallet} />
                             ))
                         ) : (
                             <div className="col-span-2">
@@ -341,7 +278,7 @@ export default function Dashboard() {
                 onMaximize={() => setIsGuideMinimized(false)}
             />
             <SocialButtons />
-            <VercelAnalytics />
+            <Analytics />
         </div>
     );
 }
@@ -349,7 +286,7 @@ export default function Dashboard() {
 interface StatsCardProps {
     title: string;
     value: string;
-    icon: ReactNode;
+    icon: React.ReactNode;
     change: number;
 }
 
